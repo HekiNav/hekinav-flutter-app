@@ -3,6 +3,9 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:hekinav/pages/main_page.dart';
+import 'package:hekinav/pages/routing_page.dart';
+import 'package:hekinav/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import './models/route.dart';
@@ -25,6 +28,7 @@ void main() {
 
   fetchRoute();
 }
+
 class ThemeProvider with ChangeNotifier {
   var theme = ThemeMode.system;
 
@@ -200,112 +204,6 @@ Future fetchData(url) async {
     return (route);
   } else {
     throw Exception('Failed to fetch');
-  }
-}
-
-class MainPage extends StatelessWidget {
-  const MainPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-
-    return Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-            image: AssetImage("assets/images/background.png"),
-            fit: BoxFit.cover
-          )
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const BigCard(text: "Hekinav"),
-            const SizedBox(height: 10),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(
-                  width: 300,
-                  child: TextField(
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.place),
-                      border: OutlineInputBorder(),
-                      hintText: 'Origin',
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  width: 300,
-                  child: TextField(
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.place),
-                      border: OutlineInputBorder(),
-                      hintText: 'Destination',
-                    ),
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    appState.switchPage(1);
-                  },
-                  label: const Text('Get route'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class RoutingPage extends StatefulWidget {
-  const RoutingPage({super.key});
-
-  @override
-  State<RoutingPage> createState() => _RoutingPageState();
-}
-
-class _RoutingPageState extends State<RoutingPage> {
-  CameraOptions camera = CameraOptions(
-    center: Point(coordinates: Position(24.941430272857485, 60.17185691732062)), 
-    zoom: 12, 
-    bearing: 0, 
-    pitch: 0,
-  );
-  
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    return Stack(children: [
-      MapWidget(
-          cameraOptions: camera,
-          styleUri: MapboxStyles.DARK,
-        )
-    ],);
-  }
-}
-
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    var themeState = context.watch<ThemeProvider>();
-    return ListView(children: [
-      const BigCard(text: "Settings"),
-      ListTile(
-        title: const Text("Dark mode"),
-        trailing: Switch.adaptive(
-          value: themeState.theme == ThemeMode.dark ? true : false,
-          onChanged: (state) {
-              themeState.toggleTheme(state);
-            }
-          ),
-      )
-      ]);
   }
 }
 
