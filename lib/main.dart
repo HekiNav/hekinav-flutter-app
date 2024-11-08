@@ -51,16 +51,10 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  ThemeMode theme = ThemeMode.system;
-
 
   var currentPage = 0;
   void switchPage(index) {
     currentPage = index;
-    notifyListeners();
-  }
-  void switchTheme(ThemeMode theme) {
-    theme = theme;
     notifyListeners();
   }
 }
