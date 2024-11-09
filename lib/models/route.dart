@@ -1,16 +1,19 @@
-class Itinerary {
-  int? startTime;
-  int? endTime;
+class Route {
+  String shortName;
+  String longName;
+  int type;
 
-  Itinerary({
-    required this.startTime,
-    required this.endTime,
+  Route({
+    required this.shortName,
+    required this.longName,
+    required this.type,
   });
 
-  factory Itinerary.fromJson(Map<String, dynamic>? json) {
-    return Itinerary(
-      startTime: json?['plan']['itineraries'][0]["startTime"],
-      endTime:   json?['plan']['itineraries'][0]["endTime"], 
+  factory Route.fromJson(Map<String, dynamic> json) {
+    return Route(
+      shortName: json['shortName'],
+      longName: json['longName'],
+      type: json['type'],
     );
   }
 }

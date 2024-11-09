@@ -7,26 +7,23 @@ import 'package:hekinav/pages/main_page.dart';
 import 'package:hekinav/pages/routing_page.dart';
 import 'package:hekinav/pages/settings_page.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
-import './models/route.dart';
-import 'package:graphql/client.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Pass your access token to MapboxOptions so you can load a map
-  String ACCESS_TOKEN = "sk.eyJ1IjoiaGVraW5hdiIsImEiOiJjbTM4cHBsaWwwcTgzMmpzNWlmNjBoN3IwIn0.rOgUhgiyHa8iXB2p0OWHIw";
+  String ACCESS_TOKEN =
+      "sk.eyJ1IjoiaGVraW5hdiIsImEiOiJjbTM4cHBsaWwwcTgzMmpzNWlmNjBoN3IwIn0.rOgUhgiyHa8iXB2p0OWHIw";
   MapboxOptions.setAccessToken(ACCESS_TOKEN);
 
-
-  runApp(MultiProvider(providers: [
+  runApp(
+    MultiProvider(providers: [
       ChangeNotifierProvider(
         create: (_) => ThemeProvider(),
       ),
-    ], child: const MyApp()),);
-
-  fetchRoute();
+    ], child: const MyApp()),
+  );
 }
 
 class ThemeProvider with ChangeNotifier {
@@ -37,11 +34,6 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 }
-final GraphQLClient client = GraphQLClient(
-    cache: GraphQLCache(),
-    link: HttpLink(
-        "https://api.digitransit.fi/routing/v1/routers/hsl/index/graphql?digitransit-subscription-key=bbc7a56df1674c59822889b1bc84e7ad"),
-);
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -80,45 +72,10 @@ class _MyAppState extends State<MyApp> {
           brightness: Brightness.dark,
         ),
         themeMode: Provider.of<ThemeProvider>(context).theme,
-
         home: const MyHomePage(),
       ),
     );
   }
-}
-
-Future fetchRoute() async {
-  String routeRequest = """
-  {
-  plan(
-    from: {lat: 60.168992, lon: 24.932366}
-    to: {lat: 60.175294, lon: 24.684855}
-    numItineraries: 3
-  ) {
-    itineraries {
-      startTime
-      legs {
-        startTime
-        endTime
-        mode
-        duration
-        realTime
-        distance
-        transitLeg
-      }
-    }
-  }
-}
-""";
-
-  final QueryOptions options = QueryOptions(document: gql(routeRequest));
-
-  final QueryResult result = await client.query(options);
-
-  var data = Itinerary.fromJson(result.data);
-  print(data.startTime);
-  print(data.endTime);
-  return(data);
 }
 
 class MyHomePage extends StatefulWidget {
@@ -182,27 +139,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       );
     });
-  }
-}
-
-Future fetchData(url) async {
-  final response = await http.post(Uri.parse(url),
-      headers: <String, String>{
-        'Content-Type': 'application/graphql',
-      },
-      body: jsonEncode(<String>{
-        '{"query":"{\n  plan(\n    from: {lat: 60.168992, lon: 24.932366}\n    to: {lat: 60.175294, lon: 24.684855}\n    numItineraries: 3\n  ) {\n    itineraries {\n      startTime\n      endTime\n      legs {\n        startTime\n        endTime\n        mode\n        duration\n        realTime\n        distance\n        transitLeg\n      }\n    }\n  }\n}"}'
-      }));
-  print(response);
-  if (response.statusCode == 200) {
-    final data = json.decode(response.body);
-    final route = Itinerary.fromJson(
-      data[1],
-    );
-    log("fetch return");
-    return (route);
-  } else {
-    throw Exception('Failed to fetch');
   }
 }
 
