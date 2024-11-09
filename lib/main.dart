@@ -51,6 +51,11 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppState extends ChangeNotifier {
+  var playedAnimation = false;
+  void AnimationPlayed() {
+    playedAnimation = true;
+    notifyListeners();
+  }
 
   var currentPage = 0;
   void switchPage(index) {
