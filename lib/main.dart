@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:hekinav/pages/main_page.dart';
@@ -9,11 +8,10 @@ import 'package:hekinav/pages/routing_page.dart';
 import 'package:hekinav/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 Future loadTokens() async {
-  return json.decode(await rootBundle.loadString('auth/secrets.json'))['MAPBOX_ACCESS_TOKEN'];
+  return json.decode(await rootBundle.loadString('auth/secrets.json'))['MAPBOX_SECRET_TOKEN'];
 }
 
 Future<void> main() async {

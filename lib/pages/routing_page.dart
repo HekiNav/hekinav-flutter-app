@@ -74,7 +74,6 @@ class _RoutingPageState extends State<RoutingPage> {
 
     polylineAnnotationManager =
         await mapboxMap.annotations.createPolylineAnnotationManager();
-
   }
 
   Future<List> fetchRoute() async {
@@ -83,18 +82,20 @@ class _RoutingPageState extends State<RoutingPage> {
     polylineAnnotationManager.deleteAll();
 
     var fromRes = await http.get(Uri.parse(
-          'https://api.digitransit.fi/geocoding/v1/search?digitransit-subscription-key=bbc7a56df1674c59822889b1bc84e7ad&text=${fromController.text == "" ? "Latokaski" : fromController.text}&size=1&boundary.rect.max_lat=61.6&boundary.rect.min_lat=59.95&boundary.rect.min_lon=23.8&boundary.rect.max_lon=27.2'));
-    if(fromRes.statusCode != 200){
+        'https://api.digitransit.fi/geocoding/v1/search?digitransit-subscription-key=bbc7a56df1674c59822889b1bc84e7ad&text=${fromController.text == "" ? "Latokaski" : fromController.text}&size=1&boundary.rect.max_lat=61.6&boundary.rect.min_lat=59.95&boundary.rect.min_lon=23.8&boundary.rect.max_lon=27.2'));
+    if (fromRes.statusCode != 200) {
       throw Exception('Failed to fetch origin');
     }
-    var fromCoords = json.decode(fromRes.body)['features'][0]["geometry"]["coordinates"];
+    var fromCoords =
+        json.decode(fromRes.body)['features'][0]["geometry"]["coordinates"];
 
     var toRes = await http.get(Uri.parse(
-          'https://api.digitransit.fi/geocoding/v1/search?digitransit-subscription-key=bbc7a56df1674c59822889b1bc84e7ad&text=${toController.text == "" ? "Tikkurila" : toController.text}&size=1&boundary.rect.max_lat=61.6&boundary.rect.min_lat=59.95&boundary.rect.min_lon=23.8&boundary.rect.max_lon=27.2'));
-    if(toRes.statusCode != 200){
+        'https://api.digitransit.fi/geocoding/v1/search?digitransit-subscription-key=bbc7a56df1674c59822889b1bc84e7ad&text=${toController.text == "" ? "Tikkurila" : toController.text}&size=1&boundary.rect.max_lat=61.6&boundary.rect.min_lat=59.95&boundary.rect.min_lon=23.8&boundary.rect.max_lon=27.2'));
+    if (toRes.statusCode != 200) {
       throw Exception('Failed to fetch destination');
     }
-    var toCoords = json.decode(toRes.body)['features'][0]["geometry"]["coordinates"];
+    var toCoords =
+        json.decode(toRes.body)['features'][0]["geometry"]["coordinates"];
 
     String epicRequest = """
   {
@@ -235,89 +236,136 @@ class _RoutingPageState extends State<RoutingPage> {
     }
   }
 
+  bool placeholder = true;
   @override
   Widget build(BuildContext context) {
     var themeState = context.watch<ThemeProvider>();
-    return Stack(
-      children: [
-        MapWidget(
-          onMapCreated: _onMapCreated,
-          cameraOptions: camera,
-          styleUri: themeState.theme == ThemeMode.dark
-              ? MapboxStyles.DARK
-              : MapboxStyles.STANDARD,
-        ),
-        DraggableScrollableSheet(
-            minChildSize: 0.1,
-            maxChildSize: 0.6,
-            initialChildSize: 0.4,
-            builder: (context, scrollController) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(20),
-                      topLeft: Radius.circular(20),
+    return Scaffold(
+      drawer: Drawer(
+        backgroundColor: Theme.of(context).colorScheme.onPrimary,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Options",
+                  style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                ),
+                ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.add_circle),
+                    title: Text(
+                      placeholder ? "Setting" : "Sitting",
+                      style:
+                          Theme.of(context).textTheme.headlineSmall!.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                     ),
-                  ),
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Routing",
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 30,
+                    trailing: Switch(
+                      value: placeholder,
+                      onChanged: (bool value) {
+                        setState(() {
+                          placeholder = value;
+                        });
+                      },
+                    ))
+              ],
+            ),
+          ),
+        ),
+      ),
+      body: Stack(
+        children: [
+          MapWidget(
+            onMapCreated: _onMapCreated,
+            cameraOptions: camera,
+            styleUri: themeState.theme == ThemeMode.dark
+                ? MapboxStyles.DARK
+                : MapboxStyles.STANDARD,
+          ),
+          DraggableScrollableSheet(
+              minChildSize: 0.1,
+              maxChildSize: 0.6,
+              initialChildSize: 0.4,
+              builder: (context, scrollController) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(20),
+                        topLeft: Radius.circular(20),
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Routing",
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 30,
+                              ),
                             ),
-                          ),
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Card(
-                                child: TextField(
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                TextField(
+                                  controller: fromController,
                                   decoration: const InputDecoration(
                                     prefixIcon: Icon(Icons.place),
                                     border: OutlineInputBorder(),
                                     hintText: 'Origin',
                                   ),
-                                  controller: fromController,
                                 ),
-                              ),
-                              Card(
-                                child: TextField(
+                                TextField(
+                                  controller: toController,
                                   decoration: const InputDecoration(
                                     prefixIcon: Icon(Icons.place),
                                     border: OutlineInputBorder(),
                                     hintText: 'Destination',
                                   ),
-                                  controller: toController,
                                 ),
-                              ),
-                              ElevatedButton.icon(
-                                onPressed: () {
-                                  log("Getting route");
-                                  var routes = fetchRoute();
-                                  showRoutes(routes);
-                                },
-                                label: const Text('Get route'),
-                              ),
-                            ],
-                          ),
-                        ],
+                                Row(
+                                  children: [
+                                    ElevatedButton.icon(
+                                      onPressed: () {
+                                        log("Getting route");
+                                        var routes = fetchRoute();
+                                        showRoutes(routes);
+                                      },
+                                      label: const Text('Get route'),
+                                    ),
+                                  ],
+                                ),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    Scaffold.of(context).openDrawer();
+                                  },
+                                  icon: const Icon(Icons.settings),
+                                  label: const Text("Settings"),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              );
-            })
-      ],
+                );
+              })
+        ],
+      ),
     );
   }
 }
