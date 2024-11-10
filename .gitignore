@@ -33,7 +33,7 @@ migrate_working_dir/
 
 # Stuff added by me
 /android/gradle.properties
-/lib/auth/secrets.json
+/auth/secrets.json
 
 # Symbolication related
 app.*.symbols

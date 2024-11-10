@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:hekinav/pages/main_page.dart';
@@ -8,13 +9,19 @@ import 'package:hekinav/pages/routing_page.dart';
 import 'package:hekinav/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
-void main() {
+Future loadTokens() async {
+  return json.decode(await rootBundle.loadString('auth/secrets.json'))['MAPBOX_ACCESS_TOKEN'];
+}
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Pass your access token to MapboxOptions so you can load a map
-  String ACCESS_TOKEN =
-      "sk.eyJ1IjoiaGVraW5hdiIsImEiOiJjbTM4cHBsaWwwcTgzMmpzNWlmNjBoN3IwIn0.rOgUhgiyHa8iXB2p0OWHIw";
+  var ACCESS_TOKEN = await loadTokens();
+  log(ACCESS_TOKEN);
   MapboxOptions.setAccessToken(ACCESS_TOKEN);
 
   runApp(
