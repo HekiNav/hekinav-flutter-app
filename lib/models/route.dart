@@ -1,16 +1,16 @@
-class Route {
+class TransitRoute {
   String shortName;
   String longName;
   int type;
 
-  Route({
+  TransitRoute({
     required this.shortName,
     required this.longName,
     required this.type,
   });
 
-  factory Route.fromJson(Map<String, dynamic> json) {
-    return Route(
+  factory TransitRoute.fromJson(Map<String, dynamic> json) {
+    return TransitRoute(
       shortName: json['shortName'],
       longName: json['longName'],
       type: json['type'],

@@ -193,7 +193,7 @@ class _RoutingPageState extends State<RoutingPage> {
     return routeList;
   }
 
-  //despite its name, currently only shows one route
+  //despite its name, currently only shows one route (half true)
   void showRoutes(routes) async {
     var routeList = await routes;
     var itinerary = routeList[0];
@@ -393,9 +393,15 @@ class _RoutingPageState extends State<RoutingPage> {
         size: 18,
       );
     } else if (leg.route?.shortName != null) {
-      return Text(leg.route!.shortName);
+      return Text(
+        leg.route!.shortName,
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+      );
     } else if (leg.route?.longName != null) {
-      return Text(leg.route!.longName);
+      return Text(
+        leg.route!.longName,
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+      );
     }
     return const Text("NO NAME");
   }
@@ -404,46 +410,53 @@ class _RoutingPageState extends State<RoutingPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Itienaries",
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.w600,
-            fontSize: 30,
-          ),
+        Wrap(
+          children: [
+            IconButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              icon: const Icon(Icons.arrow_back_ios),
+            ),
+            Text(
+              "Itineraries",
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w600,
+                fontSize: 30,
+              ),
+            ),
+          ],
         ),
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            for (Itinerary itienary in routes)
+            for (Itinerary itinerary in routes)
               Padding(
                 padding: const EdgeInsets.fromLTRB(0, 0, 0, 8.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(Radius.circular(20)),
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(2.0),
-                    child: 
-                      Wrap(
-                        spacing: 2,
+                child: Material(
+                  elevation: 5,
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
+                      color: Theme.of(context).colorScheme.surface,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          for (var leg in itienary.legs)
-                          SizedBox(
-                            width: itienary.duration / leg.duration,
-                            height: 20,
-                            child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: colorFromRouteType(leg.route?.type),
-                                  borderRadius: const BorderRadius.all(Radius.circular(4))
-                                ),
-                                child: Center(
-                                  child: legBox(leg),
-                                )),
+                          Row(
+                            children: [
+                              Text(
+                                  "${timeToString(itinerary.startTime)} - ${timeToString(itinerary.endTime)}")
+                            ],
                           ),
+                          routePreview(itinerary),
                         ],
                       ),
+                    ),
                   ),
                 ),
               ),
@@ -452,34 +465,62 @@ class _RoutingPageState extends State<RoutingPage> {
       ],
     );
   }
+
+  Wrap routePreview(Itinerary itinerary) {
+    return Wrap(
+      spacing: 2,
+      children: [
+        for (var leg in itinerary.legs)
+          SizedBox(
+            width: itinerary.duration.toDouble() / leg.duration * 2,
+            height: 20,
+            child: DecoratedBox(
+                decoration: BoxDecoration(
+                    color: colorFromRouteType(leg.route?.type),
+                    borderRadius: const BorderRadius.all(Radius.circular(4))),
+                child: Center(
+                  child: legBox(leg),
+                )),
+          ),
+      ],
+    );
+  }
+}
+
+String timeToString(DateTime time) {
+  return "${padNumber10(time.hour)}:${padNumber10(time.minute)}:${padNumber10(time.second)}";
+}
+
+String padNumber10(number) {
+  return number < 10 ? "0$number" : number.toString();
 }
 
 Color colorFromRouteType(int? route_type) {
   switch (route_type) {
-    case null:
+    case null: //walk
       return Colors.grey;
-    case 0:
+    case 0: //tram
       return Colors.green;
-    case 1:
+    case 1: //metro
       return Colors.red;
-    case 4:
+    case 4: //ferry
       return Colors.teal;
-    case 102:
+    case 102: //long distance train
       return Colors.green;
-    case 109:
+    case 109: //short distance train
       return Colors.purple;
-    case 3:
-    case 700:
-    case 701:
+    case 3: //bus
+    case 700: //bus
+    case 701: //bus
       return Colors.blue;
-    case 702:
+    case 702: //trunk bus
       return const Color(0xffEA7000);
-    case 704:
-    case 712:
+    case 704: //lähibussi
+    case 712: //lähibussi
       return Colors.cyan;
-    case 900:
+    case 900: //speedtram
       return const Color(0xff006400);
-    case 1104:
+    case 1104: //airplane
       return const Color(0xff00008B);
     default:
       return Colors.pink;

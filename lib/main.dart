@@ -32,7 +32,7 @@ Future<void> main() async {
 }
 
 class ThemeProvider with ChangeNotifier {
-  var theme = ThemeMode.system;
+  var theme = ThemeMode.light;
 
   dynamic toggleTheme(bool isDark) {
     theme = isDark ? ThemeMode.dark : ThemeMode.light;

@@ -14,7 +14,7 @@ class Leg {
   From from;
   To to;
   Trip? trip;
-  Route? route;
+  TransitRoute? route;
   LegGeometry geometry;
 
   Leg({
@@ -42,7 +42,7 @@ class Leg {
       from: From.fromJson(json['from']),
       to: To.fromJson(json['to']),
       trip: json['trip'] == null ? null : Trip.fromJson(json['trip']),
-      route: json['route'] == null ? null : Route.fromJson(json['route']),
+      route: json['route'] == null ? null : TransitRoute.fromJson(json['route']),
       geometry: LegGeometry.fromJson(json['legGeometry'])
     );
   }
