@@ -395,12 +395,14 @@ class _RoutingPageState extends State<RoutingPage> {
     } else if (leg.route?.shortName != null) {
       return Text(
         leg.route!.shortName,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+        style:
+            const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
       );
     } else if (leg.route?.longName != null) {
       return Text(
         leg.route!.longName,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+        style:
+            const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
       );
     }
     return const Text("NO NAME");
@@ -466,24 +468,24 @@ class _RoutingPageState extends State<RoutingPage> {
     );
   }
 
-  Wrap routePreview(Itinerary itinerary) {
-    return Wrap(
-      spacing: 2,
-      children: [
-        for (var leg in itinerary.legs)
-          SizedBox(
-            width: itinerary.duration.toDouble() / leg.duration * 2,
-            height: 20,
-            child: DecoratedBox(
-                decoration: BoxDecoration(
-                    color: colorFromRouteType(leg.route?.type),
-                    borderRadius: const BorderRadius.all(Radius.circular(4))),
-                child: Center(
-                  child: legBox(leg),
-                )),
-          ),
-      ],
-    );
+  LayoutBuilder routePreview(Itinerary itinerary) {
+    return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) => Row(
+        children: [
+          for (var leg in itinerary.legs)
+            SizedBox(
+              width: leg.duration / itinerary.duration * constraints.maxWidth,
+              height: 20,
+              child: DecoratedBox(
+                  decoration: BoxDecoration(
+                      color: colorFromRouteType(leg.route?.type),
+                      borderRadius: const BorderRadius.all(Radius.circular(4))),
+                  child: Center(
+                    child: legBox(leg),
+                  )),
+            ),
+        ],
+      ));
   }
 }
 
