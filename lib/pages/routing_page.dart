@@ -1,7 +1,8 @@
 import 'dart:developer';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:hekinav/main.dart';
 import 'package:hekinav/models/leg.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
@@ -10,6 +11,7 @@ import 'package:hekinav/models/itinerary.dart';
 import 'package:graphql/client.dart';
 import 'package:http/http.dart' as http;
 import 'package:polyline_codec/polyline_codec.dart';
+import 'package:intl/intl.dart';
 
 HttpLink link = HttpLink(
     "https://api.digitransit.fi/routing/v2/routers/hsl/index/graphql",
@@ -40,13 +42,12 @@ class _RoutingPageState extends State<RoutingPage> {
   late CircleAnnotationManager circleAnnotationManager;
   late PolylineAnnotation polylineAnnotation;
   late PolylineAnnotationManager polylineAnnotationManager;
+  late PointAnnotation pointAnnotation;
+  late PointAnnotationManager pointAnnotationManager;
   late MapboxMap mapboxMap;
 
   final fromController = TextEditingController();
   final toController = TextEditingController();
-
-  List markerList = [];
-  List polylineList = [];
 
   @override
   void dispose() {
@@ -75,6 +76,9 @@ class _RoutingPageState extends State<RoutingPage> {
 
     polylineAnnotationManager =
         await mapboxMap.annotations.createPolylineAnnotationManager();
+
+    pointAnnotationManager =
+        await mapboxMap.annotations.createPointAnnotationManager();
   }
 
   Future<List> fetchRoute() async {
@@ -103,6 +107,8 @@ class _RoutingPageState extends State<RoutingPage> {
   plan(
     from: {lat: ${fromCoords[1]}, lon: ${fromCoords[0]}}
     to: {lat: ${toCoords[1]}, lon: ${toCoords[0]}}
+    time: "${startTime?.hour}:${startTime?.minute}:00"
+    date: "${DateFormat("yyyy-MM-dd")}"
   ) {
     itineraries {
       duration
@@ -210,18 +216,18 @@ class _RoutingPageState extends State<RoutingPage> {
 
       //[[lat, lon], [lat, lon]] -> [Position, Position]
       List<Position> posList = [];
-      for (int j = 0; j < points.length; j++) {
-        posList.add(Position(points[j][1], points[j][0]));
+      for (var point in points) {
+        posList.add(Position(point[1], point[0]));
       }
 
       //draw the shape
       polylineAnnotationManager
           .create(PolylineAnnotationOptions(
-              geometry: LineString(coordinates: posList),
-              lineWidth: 5.0,
-              lineColor: color.value))
-          .then((value) => polylineAnnotation = value)
-          .then((value) => polylineList.add(value));
+            geometry: LineString(coordinates: posList),
+            lineWidth: 5.0,
+            lineColor: color.value,
+          ))
+          .then((value) => polylineAnnotation = value);
 
       //draw the circle
       circleAnnotationManager
@@ -234,8 +240,7 @@ class _RoutingPageState extends State<RoutingPage> {
             circleColor: const Color.fromARGB(255, 255, 255, 255).value,
             circleRadius: 9.0,
           ))
-          .then((value) => circleAnnotation = value)
-          .then((value) => markerList.add(value));
+          .then((value) => circleAnnotation = value);
     }
   }
 
@@ -261,23 +266,23 @@ class _RoutingPageState extends State<RoutingPage> {
                       ),
                 ),
                 ListTile(
-                    dense: true,
-                    leading: const Icon(Icons.add_circle),
-                    title: Text(
-                      placeholder ? "Setting" : "Sitting",
-                      style:
-                          Theme.of(context).textTheme.headlineSmall!.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                    ),
-                    trailing: Switch(
-                      value: placeholder,
-                      onChanged: (bool value) {
-                        setState(() {
-                          placeholder = value;
-                        });
-                      },
-                    ))
+                  dense: true,
+                  leading: const Icon(Icons.add_circle),
+                  title: Text(
+                    placeholder ? "Setting" : "Sitting",
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                  ),
+                  trailing: Switch(
+                    value: placeholder,
+                    onChanged: (bool value) {
+                      setState(() {
+                        placeholder = value;
+                      });
+                    },
+                  ),
+                ),
               ],
             ),
           ),
@@ -328,6 +333,9 @@ class _RoutingPageState extends State<RoutingPage> {
     );
   }
 
+  TimeOfDay? startTime = TimeOfDay.now();
+  DateTime startDate = DateTime.now();
+  DateFormat greatFormat = DateFormat("dd-MM-yyyy");
   Column searchView(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,6 +366,33 @@ class _RoutingPageState extends State<RoutingPage> {
                 border: OutlineInputBorder(),
                 hintText: 'Destination',
               ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    startTime = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                    );
+                    setState(() {});
+                  },
+                  label: Text(startTime!.format(context)),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    startDate = (await showDatePicker(
+                        context: context,
+                        initialDate: startDate,
+                        firstDate: DateTime.fromMicrosecondsSinceEpoch(0),
+                        lastDate: DateTime(102111111989749)))!;
+                    setState(() {});
+                  },
+                  label: Text(greatFormat.format(startDate).toString()),
+                ),
+              ],
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -471,21 +506,24 @@ class _RoutingPageState extends State<RoutingPage> {
   LayoutBuilder routePreview(Itinerary itinerary) {
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) => Row(
-        children: [
-          for (var leg in itinerary.legs)
-            SizedBox(
-              width: leg.duration / itinerary.duration * constraints.maxWidth,
-              height: 20,
-              child: DecoratedBox(
-                  decoration: BoxDecoration(
-                      color: colorFromRouteType(leg.route?.type),
-                      borderRadius: const BorderRadius.all(Radius.circular(4))),
-                  child: Center(
-                    child: legBox(leg),
-                  )),
-            ),
-        ],
-      ));
+              children: [
+                for (var leg in itinerary.legs)
+                  SizedBox(
+                    width: leg.duration /
+                        itinerary.duration *
+                        constraints.maxWidth,
+                    height: 20,
+                    child: DecoratedBox(
+                        decoration: BoxDecoration(
+                            color: colorFromRouteType(leg.route?.type),
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(4))),
+                        child: Center(
+                          child: legBox(leg),
+                        )),
+                  ),
+              ],
+            ));
   }
 }
 
@@ -528,3 +566,5 @@ Color colorFromRouteType(int? route_type) {
       return Colors.pink;
   }
 }
+
+epicFunction() {}
