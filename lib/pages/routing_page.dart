@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:hekinav/main.dart';
+import 'package:hekinav/models/leg.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:hekinav/models/itinerary.dart';
@@ -197,6 +198,8 @@ class _RoutingPageState extends State<RoutingPage> {
     var routeList = await routes;
     var itinerary = routeList[0];
 
+    navigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (context) => mainView(context, routeList)));
     //draw shapes and transfer stops
     for (int i = 0; i < itinerary.legs.length; i++) {
       //get color of route type
@@ -216,7 +219,7 @@ class _RoutingPageState extends State<RoutingPage> {
           .create(PolylineAnnotationOptions(
               geometry: LineString(coordinates: posList),
               lineWidth: 5.0,
-              lineColor: color))
+              lineColor: color.value))
           .then((value) => polylineAnnotation = value)
           .then((value) => polylineList.add(value));
 
@@ -226,7 +229,7 @@ class _RoutingPageState extends State<RoutingPage> {
             geometry: Point(
                 coordinates: Position(
                     itinerary.legs[i].from.lon, itinerary.legs[i].from.lat)),
-            circleStrokeColor: color,
+            circleStrokeColor: color.value,
             circleStrokeWidth: 3.0,
             circleColor: const Color.fromARGB(255, 255, 255, 255).value,
             circleRadius: 9.0,
@@ -235,6 +238,8 @@ class _RoutingPageState extends State<RoutingPage> {
           .then((value) => markerList.add(value));
     }
   }
+
+  final navigatorKey = GlobalKey<NavigatorState>();
 
   bool placeholder = true;
   @override
@@ -306,58 +311,12 @@ class _RoutingPageState extends State<RoutingPage> {
                       controller: scrollController,
                       child: Padding(
                         padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Routing",
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 30,
-                              ),
-                            ),
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                TextField(
-                                  controller: fromController,
-                                  decoration: const InputDecoration(
-                                    prefixIcon: Icon(Icons.place),
-                                    border: OutlineInputBorder(),
-                                    hintText: 'Origin',
-                                  ),
-                                ),
-                                TextField(
-                                  controller: toController,
-                                  decoration: const InputDecoration(
-                                    prefixIcon: Icon(Icons.place),
-                                    border: OutlineInputBorder(),
-                                    hintText: 'Destination',
-                                  ),
-                                ),
-                                Row(
-                                  children: [
-                                    ElevatedButton.icon(
-                                      onPressed: () {
-                                        log("Getting route");
-                                        var routes = fetchRoute();
-                                        showRoutes(routes);
-                                      },
-                                      label: const Text('Get route'),
-                                    ),
-                                  ],
-                                ),
-                                ElevatedButton.icon(
-                                  onPressed: () {
-                                    Scaffold.of(context).openDrawer();
-                                  },
-                                  icon: const Icon(Icons.settings),
-                                  label: const Text("Settings"),
-                                ),
-                              ],
-                            ),
-                          ],
+                        child: Navigator(
+                          key: navigatorKey,
+                          onGenerateRoute: (route) => MaterialPageRoute(
+                            settings: route,
+                            builder: (context) => searchView(context),
+                          ),
                         ),
                       ),
                     ),
@@ -368,36 +327,161 @@ class _RoutingPageState extends State<RoutingPage> {
       ),
     );
   }
+
+  Column searchView(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Routing",
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w600,
+            fontSize: 30,
+          ),
+        ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: fromController,
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.place),
+                border: OutlineInputBorder(),
+                hintText: 'Origin',
+              ),
+            ),
+            TextField(
+              controller: toController,
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.place),
+                border: OutlineInputBorder(),
+                hintText: 'Destination',
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    log("Getting route");
+                    var routes = fetchRoute();
+                    showRoutes(routes);
+                  },
+                  label: const Text('Get route'),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Scaffold.of(context).openDrawer();
+                  },
+                  icon: const Icon(Icons.settings),
+                  label: const Text("Settings"),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget legBox(Leg leg) {
+    if (leg.mode == "WALK") {
+      return const Icon(
+        Icons.directions_walk,
+        size: 18,
+      );
+    } else if (leg.route?.shortName != null) {
+      return Text(leg.route!.shortName);
+    } else if (leg.route?.longName != null) {
+      return Text(leg.route!.longName);
+    }
+    return const Text("NO NAME");
+  }
+
+  Column mainView(BuildContext context, List<Itinerary> routes) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Itienaries",
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w600,
+            fontSize: 30,
+          ),
+        ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (Itinerary itienary in routes)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 8.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(Radius.circular(20)),
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(2.0),
+                    child: 
+                      Wrap(
+                        spacing: 2,
+                        children: [
+                          for (var leg in itienary.legs)
+                          SizedBox(
+                            width: itienary.duration / leg.duration,
+                            height: 20,
+                            child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: colorFromRouteType(leg.route?.type),
+                                  borderRadius: const BorderRadius.all(Radius.circular(4))
+                                ),
+                                child: Center(
+                                  child: legBox(leg),
+                                )),
+                          ),
+                        ],
+                      ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
-int colorFromRouteType(int? route_type) {
+Color colorFromRouteType(int? route_type) {
   switch (route_type) {
     case null:
-      return Colors.grey.value;
+      return Colors.grey;
     case 0:
-      return Colors.green.value;
+      return Colors.green;
     case 1:
-      return Colors.red.value;
+      return Colors.red;
     case 4:
-      return Colors.teal.value;
+      return Colors.teal;
     case 102:
-      return Colors.green.value;
+      return Colors.green;
     case 109:
-      return Colors.purple.value;
+      return Colors.purple;
     case 3:
     case 700:
     case 701:
-      return Colors.blue.value;
+      return Colors.blue;
     case 702:
-      return const Color(0xffEA7000).value;
+      return const Color(0xffEA7000);
     case 704:
     case 712:
-      return Colors.cyan.value;
+      return Colors.cyan;
     case 900:
-      return const Color(0xff006400).value;
+      return const Color(0xff006400);
     case 1104:
-      return const Color(0xff00008B).value;
+      return const Color(0xff00008B);
     default:
-      return Colors.pink.value;
+      return Colors.pink;
   }
 }
