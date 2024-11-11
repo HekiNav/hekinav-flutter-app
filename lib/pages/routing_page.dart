@@ -85,6 +85,7 @@ class _RoutingPageState extends State<RoutingPage> {
     //remove previous markers and polylines
     circleAnnotationManager.deleteAll();
     polylineAnnotationManager.deleteAll();
+    pointAnnotationManager.deleteAll();
 
     var fromRes = await http.get(Uri.parse(
         'https://api.digitransit.fi/geocoding/v1/search?digitransit-subscription-key=bbc7a56df1674c59822889b1bc84e7ad&text=${fromController.text == "" ? "Latokaski" : fromController.text}&size=1&boundary.rect.max_lat=61.6&boundary.rect.min_lat=59.95&boundary.rect.min_lon=23.8&boundary.rect.max_lon=27.2'));
@@ -220,6 +221,30 @@ class _RoutingPageState extends State<RoutingPage> {
         posList.add(Position(point[1], point[0]));
       }
 
+      final ByteData bytesR = await rootBundle.load('assets/images/pin_red.png');
+      final Uint8List imageDataR = bytesR.buffer.asUint8List();
+
+      final ByteData bytesG = await rootBundle.load('assets/images/pin_green.png');
+      final Uint8List imageDataG = bytesG.buffer.asUint8List();
+
+      pointAnnotationManager.create(PointAnnotationOptions(
+        geometry: Point(
+          coordinates:
+              Position(itinerary.legs[0].from.lon, itinerary.legs[0].from.lat),
+        ), // Example coordinates
+        image: imageDataR,
+        iconSize: 0.1,
+        iconAnchor: IconAnchor.BOTTOM,
+      ));
+      pointAnnotationManager.create(PointAnnotationOptions(
+        geometry: Point(
+          coordinates:
+              Position(itinerary.legs.last.to.lon, itinerary.legs.last.to.lat),
+        ), // Example coordinates
+        image: imageDataG,
+        iconSize: 0.1,
+        iconAnchor: IconAnchor.BOTTOM,
+      ));
       //draw the shape
       polylineAnnotationManager
           .create(PolylineAnnotationOptions(

@@ -31,5 +31,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/background.png
-    - assets/images/pin.svg
     - auth/secrets.json
+    - assets/images/pin_red.png
+    - assets/images/pin_green.png
