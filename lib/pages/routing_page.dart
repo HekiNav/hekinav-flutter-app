@@ -82,9 +82,7 @@ class _RoutingPageState extends State<RoutingPage> {
   }
 
   Future<List> fetchRoute() async {
-    //remove previous markers and polylines
-    circleAnnotationManager.deleteAll();
-    polylineAnnotationManager.deleteAll();
+    //remove previous markers
     pointAnnotationManager.deleteAll();
 
     var fromRes = await http.get(Uri.parse(
@@ -201,16 +199,12 @@ class _RoutingPageState extends State<RoutingPage> {
   }
 
   //despite its name, currently only shows one route (half true)
-  void showRoutes(routes) async {
-    var routeList = await routes;
-    var itinerary = routeList[0];
-
-    navigatorKey.currentState?.push(
-        MaterialPageRoute(builder: (context) => mainView(context, routeList)));
+  void showRoute(Itinerary itinerary, bool selected) async {
     //draw shapes and transfer stops
     for (int i = 0; i < itinerary.legs.length; i++) {
       //get color of route type
-      var color = colorFromRouteType(itinerary.legs[i].route?.type);
+      var color =
+          colorFromRouteType(selected ? itinerary.legs[i].route?.type : null);
 
       //google polyline encoded -> [[lat, lon], [lat, lon]]
       var points = PolylineCodec.decode(itinerary.legs[i].geometry.points);
@@ -221,30 +215,10 @@ class _RoutingPageState extends State<RoutingPage> {
         posList.add(Position(point[1], point[0]));
       }
 
-      final ByteData bytesR = await rootBundle.load('assets/images/pin_red.png');
-      final Uint8List imageDataR = bytesR.buffer.asUint8List();
+      if (selected) {
+        
+      }
 
-      final ByteData bytesG = await rootBundle.load('assets/images/pin_green.png');
-      final Uint8List imageDataG = bytesG.buffer.asUint8List();
-
-      pointAnnotationManager.create(PointAnnotationOptions(
-        geometry: Point(
-          coordinates:
-              Position(itinerary.legs[0].from.lon, itinerary.legs[0].from.lat),
-        ), // Example coordinates
-        image: imageDataR,
-        iconSize: 0.1,
-        iconAnchor: IconAnchor.BOTTOM,
-      ));
-      pointAnnotationManager.create(PointAnnotationOptions(
-        geometry: Point(
-          coordinates:
-              Position(itinerary.legs.last.to.lon, itinerary.legs.last.to.lat),
-        ), // Example coordinates
-        image: imageDataG,
-        iconSize: 0.1,
-        iconAnchor: IconAnchor.BOTTOM,
-      ));
       //draw the shape
       polylineAnnotationManager
           .create(PolylineAnnotationOptions(
@@ -424,11 +398,7 @@ class _RoutingPageState extends State<RoutingPage> {
               mainAxisSize: MainAxisSize.max,
               children: [
                 ElevatedButton.icon(
-                  onPressed: () {
-                    log("Getting route");
-                    var routes = fetchRoute();
-                    showRoutes(routes);
-                  },
+                  onPressed: getRoutes,
                   label: const Text('Get route'),
                 ),
                 ElevatedButton.icon(
@@ -444,6 +414,57 @@ class _RoutingPageState extends State<RoutingPage> {
         ),
       ],
     );
+  }
+
+  void getRoutes() async {
+    log("Getting route");
+    var routes = fetchRoute();
+
+    var routeList = await routes;
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (context) => mainView(context, routeList),
+      ),
+    );
+    final ByteData bytesR =
+            await rootBundle.load('assets/images/pin_red.png');
+        final Uint8List imageDataR = bytesR.buffer.asUint8List();
+
+        final ByteData bytesG =
+            await rootBundle.load('assets/images/pin_green.png');
+        final Uint8List imageDataG = bytesG.buffer.asUint8List();
+
+        pointAnnotationManager.create(PointAnnotationOptions(
+          geometry: Point(
+            coordinates: Position(
+                routeList[0].legs[0].from.lon, routeList[0].legs[0].from.lat),
+          ), // Example coordinates
+          image: imageDataR,
+          iconSize: 0.1,
+          iconAnchor: IconAnchor.BOTTOM,
+        ));
+        pointAnnotationManager.create(PointAnnotationOptions(
+          geometry: Point(
+            coordinates: Position(
+                routeList[0].legs.last.to.lon, routeList[0].legs.last.to.lat),
+          ), // Example coordinates
+          image: imageDataG,
+          iconSize: 0.1,
+          iconAnchor: IconAnchor.BOTTOM,
+        ));
+    selectRoute(routeList, 0);
+  }
+
+  void selectRoute(List routeList, int index) {
+    circleAnnotationManager.deleteAll();
+    polylineAnnotationManager.deleteAll();
+    for (var i = 0; i < routeList.length; i++) {
+      Itinerary itinerary = routeList[i];
+      if (i != index) {
+      showRoute(itinerary, false);
+      }
+    }
+    showRoute(routeList[index], true);
   }
 
   Widget legBox(Leg leg) {
@@ -468,7 +489,7 @@ class _RoutingPageState extends State<RoutingPage> {
     return const Text("NO NAME");
   }
 
-  Column mainView(BuildContext context, List<Itinerary> routes) {
+  Column mainView(BuildContext context, List routes) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -493,30 +514,33 @@ class _RoutingPageState extends State<RoutingPage> {
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            for (Itinerary itinerary in routes)
+            for (var i = 0; i < routes.length; i++)
               Padding(
                 padding: const EdgeInsets.fromLTRB(0, 0, 0, 8.0),
-                child: Material(
-                  elevation: 5,
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                  "${timeToString(itinerary.startTime)} - ${timeToString(itinerary.endTime)}")
-                            ],
-                          ),
-                          routePreview(itinerary),
-                        ],
+                child: InkWell(
+                  onTap: () => selectRoute(routes,i),
+                  child: Material(
+                    elevation: 5,
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                    "${timeToString(routes[i].startTime)} - ${timeToString(routes[i].endTime)}")
+                              ],
+                            ),
+                            routePreview(routes[i]),
+                          ],
+                        ),
                       ),
                     ),
                   ),
