@@ -19,7 +19,6 @@ Future<void> main() async {
 
   // Pass your access token to MapboxOptions so you can load a map
   var ACCESS_TOKEN = await loadTokens();
-  log(ACCESS_TOKEN);
   MapboxOptions.setAccessToken(ACCESS_TOKEN);
 
   runApp(
