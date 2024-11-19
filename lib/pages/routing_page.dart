@@ -215,9 +215,7 @@ class _RoutingPageState extends State<RoutingPage> {
         posList.add(Position(point[1], point[0]));
       }
 
-      if (selected) {
-        
-      }
+      if (selected) {}
 
       //draw the shape
       polylineAnnotationManager
@@ -243,7 +241,8 @@ class _RoutingPageState extends State<RoutingPage> {
     }
   }
 
-  final navigatorKey = GlobalKey<NavigatorState>();
+  final bottomDrawerKey = GlobalKey<NavigatorState>();
+  final searchNavigatorKey = GlobalKey<NavigatorState>();
 
   bool placeholder = true;
   @override
@@ -296,37 +295,14 @@ class _RoutingPageState extends State<RoutingPage> {
                 ? MapboxStyles.DARK
                 : MapboxStyles.STANDARD,
           ),
-          DraggableScrollableSheet(
-              minChildSize: 0.1,
-              maxChildSize: 0.6,
-              initialChildSize: 0.4,
-              builder: (context, scrollController) {
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: const BorderRadius.only(
-                        topRight: Radius.circular(20),
-                        topLeft: Radius.circular(20),
-                      ),
-                    ),
-                    child: SingleChildScrollView(
-                      controller: scrollController,
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Navigator(
-                          key: navigatorKey,
-                          onGenerateRoute: (route) => MaterialPageRoute(
-                            settings: route,
-                            builder: (context) => searchView(context),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              })
+          Navigator(
+            key: searchNavigatorKey,
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (context) => mainSheet(),
+              );
+            },
+          )
         ],
       ),
     );
@@ -335,6 +311,7 @@ class _RoutingPageState extends State<RoutingPage> {
   TimeOfDay? startTime = TimeOfDay.now();
   DateTime startDate = DateTime.now();
   DateFormat greatFormat = DateFormat("dd-MM-yyyy");
+
   Column searchView(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,20 +327,37 @@ class _RoutingPageState extends State<RoutingPage> {
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: fromController,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.place),
-                border: OutlineInputBorder(),
-                hintText: 'Origin',
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () => searchNavigatorKey.currentState?.push(
+                MaterialPageRoute(
+                  builder: (context) => searchPlace(),
+                ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.place),
+                  Text("Origin"),
+                ],
               ),
             ),
-            TextField(
-              controller: toController,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.place),
-                border: OutlineInputBorder(),
-                hintText: 'Destination',
+            ElevatedButton(
+              onPressed: () => searchNavigatorKey.currentState?.push(
+                MaterialPageRoute(
+                  builder: (context) => searchPlace(),
+                ),
+              ),
+              child: Container(
+                child: const Row(
+                  children: [
+                    Icon(Icons.place),
+                    Text("Origin"),
+                  ],
+                ),
               ),
             ),
             Row(
@@ -421,37 +415,36 @@ class _RoutingPageState extends State<RoutingPage> {
     var routes = fetchRoute();
 
     var routeList = await routes;
-    navigatorKey.currentState?.push(
+    bottomDrawerKey.currentState?.push(
       MaterialPageRoute(
         builder: (context) => mainView(context, routeList),
       ),
     );
-    final ByteData bytesR =
-            await rootBundle.load('assets/images/pin_red.png');
-        final Uint8List imageDataR = bytesR.buffer.asUint8List();
+    final ByteData bytesR = await rootBundle.load('assets/images/pin_red.png');
+    final Uint8List imageDataR = bytesR.buffer.asUint8List();
 
-        final ByteData bytesG =
-            await rootBundle.load('assets/images/pin_green.png');
-        final Uint8List imageDataG = bytesG.buffer.asUint8List();
+    final ByteData bytesG =
+        await rootBundle.load('assets/images/pin_green.png');
+    final Uint8List imageDataG = bytesG.buffer.asUint8List();
 
-        pointAnnotationManager.create(PointAnnotationOptions(
-          geometry: Point(
-            coordinates: Position(
-                routeList[0].legs[0].from.lon, routeList[0].legs[0].from.lat),
-          ), // Example coordinates
-          image: imageDataR,
-          iconSize: 0.1,
-          iconAnchor: IconAnchor.BOTTOM,
-        ));
-        pointAnnotationManager.create(PointAnnotationOptions(
-          geometry: Point(
-            coordinates: Position(
-                routeList[0].legs.last.to.lon, routeList[0].legs.last.to.lat),
-          ), // Example coordinates
-          image: imageDataG,
-          iconSize: 0.1,
-          iconAnchor: IconAnchor.BOTTOM,
-        ));
+    pointAnnotationManager.create(PointAnnotationOptions(
+      geometry: Point(
+        coordinates: Position(
+            routeList[0].legs[0].from.lon, routeList[0].legs[0].from.lat),
+      ), // Example coordinates
+      image: imageDataR,
+      iconSize: 0.1,
+      iconAnchor: IconAnchor.BOTTOM,
+    ));
+    pointAnnotationManager.create(PointAnnotationOptions(
+      geometry: Point(
+        coordinates: Position(
+            routeList[0].legs.last.to.lon, routeList[0].legs.last.to.lat),
+      ), // Example coordinates
+      image: imageDataG,
+      iconSize: 0.1,
+      iconAnchor: IconAnchor.BOTTOM,
+    ));
     selectRoute(routeList, 0);
   }
 
@@ -461,7 +454,7 @@ class _RoutingPageState extends State<RoutingPage> {
     for (var i = 0; i < routeList.length; i++) {
       Itinerary itinerary = routeList[i];
       if (i != index) {
-      showRoute(itinerary, false);
+        showRoute(itinerary, false);
       }
     }
     showRoute(routeList[index], true);
@@ -518,13 +511,14 @@ class _RoutingPageState extends State<RoutingPage> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(0, 0, 0, 8.0),
                 child: InkWell(
-                  onTap: () => selectRoute(routes,i),
+                  onTap: () => selectRoute(routes, i),
                   child: Material(
                     elevation: 5,
                     borderRadius: const BorderRadius.all(Radius.circular(10)),
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.all(Radius.circular(10)),
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(10)),
                         color: Theme.of(context).colorScheme.surface,
                       ),
                       child: Padding(
@@ -573,6 +567,83 @@ class _RoutingPageState extends State<RoutingPage> {
                   ),
               ],
             ));
+  }
+
+  LayoutBuilder searchPlace() {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) => Container(
+        color: Colors.white,
+        child: Expanded(
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      searchNavigatorKey.currentState?.pop();
+                    },
+                    child: const Text("Close"),
+                  ),
+                  TextField(
+                    controller: fromController,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.place),
+                      border: OutlineInputBorder(),
+                      hintText: 'Origin',
+                    ),
+                  ),
+                  TextField(
+                    controller: toController,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.place),
+                      border: OutlineInputBorder(),
+                      hintText: 'Destination',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  LayoutBuilder mainSheet() {
+    return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) =>
+            DraggableScrollableSheet(
+                minChildSize: 0.1,
+                maxChildSize: 0.9,
+                initialChildSize: 0.4,
+                builder: (context, scrollController) {
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: const BorderRadius.only(
+                          topRight: Radius.circular(20),
+                          topLeft: Radius.circular(20),
+                        ),
+                      ),
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Navigator(
+                            key: bottomDrawerKey,
+                            onGenerateRoute: (route) => MaterialPageRoute(
+                              settings: route,
+                              builder: (context) => searchView(context),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }));
   }
 }
 
