@@ -29,6 +29,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family:  FirstIcons
+      fonts:
+       - asset: font/FirstIcons.ttf
   assets:
     - assets/images/background.png
     - auth/secrets.json

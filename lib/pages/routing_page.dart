@@ -12,6 +12,8 @@ import 'package:graphql/client.dart';
 import 'package:http/http.dart' as http;
 import 'package:polyline_codec/polyline_codec.dart';
 import 'package:intl/intl.dart';
+import 'package:hekinav/icon/first_icons_icons.dart';
+import 'package:hekinav/models/search_results.dart';
 
 HttpLink link = HttpLink(
     "https://api.digitransit.fi/routing/v2/routers/hsl/index/graphql",
@@ -335,7 +337,7 @@ class _RoutingPageState extends State<RoutingPage> {
               ),
               onPressed: () => searchNavigatorKey.currentState?.push(
                 MaterialPageRoute(
-                  builder: (context) => searchPlace(),
+                  builder: (context) => searchPlace("Origin"),
                 ),
               ),
               child: const Row(
@@ -348,14 +350,14 @@ class _RoutingPageState extends State<RoutingPage> {
             ElevatedButton(
               onPressed: () => searchNavigatorKey.currentState?.push(
                 MaterialPageRoute(
-                  builder: (context) => searchPlace(),
+                  builder: (context) => searchPlace("Destination"),
                 ),
               ),
               child: Container(
                 child: const Row(
                   children: [
                     Icon(Icons.place),
-                    Text("Origin"),
+                    Text("Destination"),
                   ],
                 ),
               ),
@@ -569,22 +571,23 @@ class _RoutingPageState extends State<RoutingPage> {
             ));
   }
 
-  LayoutBuilder searchPlace() {
+  LayoutBuilder searchPlace(String text) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) => Container(
         color: Colors.white,
-        child: Expanded(
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      searchNavigatorKey.currentState?.pop();
-                    },
-                    child: const Text("Close"),
-                  ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ListView(
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    searchNavigatorKey.currentState?.pop();
+                  },
+                  child: const Text("Close"),
+                ),
+                if (text == "Origin")
                   TextField(
                     controller: fromController,
                     decoration: const InputDecoration(
@@ -593,6 +596,7 @@ class _RoutingPageState extends State<RoutingPage> {
                       hintText: 'Origin',
                     ),
                   ),
+                if (text == "Destination")
                   TextField(
                     controller: toController,
                     decoration: const InputDecoration(
@@ -601,8 +605,8 @@ class _RoutingPageState extends State<RoutingPage> {
                       hintText: 'Destination',
                     ),
                   ),
-                ],
-              ),
+                searchResults(text == "Origin" ? "Tikkurila" : "Latokaski")
+              ],
             ),
           ),
         ),
@@ -684,6 +688,127 @@ Color colorFromRouteType(int? route_type) {
       return const Color(0xff00008B);
     default:
       return Colors.pink;
+  }
+}
+
+Padding searchResults(stopInputString) {
+  if (stopInputString == "") {
+    return const Padding(
+      padding: EdgeInsets.all(0.0),
+      child: Center(child: Text("no fooba just yet")),
+    );
+  } else {
+    var data = fetchStops(
+        'https://api.digitransit.fi/geocoding/v1/search?digitransit-subscription-key=bbc7a56df1674c59822889b1bc84e7ad&text=$stopInputString&size=1000&sources=gtfsMATKA%2CgtfsHSL%2CgtfsLINKKI%2Cgtfstampere%2CgtfsOULU%2Cgtfsdigitraffic%2CgtfsRauma%2CgtfsHameenlinna%2CgtfsKotka%2CgtfsKouvola%2CgtfsLappeenranta%2CgtfsMikkeli%2CgtfsVaasa%2CgtfsJoensuu%2CgtfsFOLI%2CgtfsLahti%2CgtfsKuopio%2CgtfsRovaniemi%2CgtfsKajaani%2CgtfsSalo%2CgtfsPori%2CgtfsRaasepori%2CgtfsVARELY%2CgtfsHarma%2CgtfsVikingline&layers=stop%2Cstation');
+    return Padding(
+      padding: const EdgeInsets.only(top: 20.0),
+      child: FutureBuilder(
+        future: data,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return ListView.builder(
+                primary: false,
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: snapshot.data?.length,
+                shrinkWrap: true,
+                scrollDirection: Axis.vertical,
+                itemBuilder: (BuildContext context, int index) {
+                  return ListTile(
+                    title: Row(
+                      children: [
+                        modeIcon(snapshot.data?[index].mode),
+                        const Text(" "),
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(snapshot.data?[index].name),
+                              stopExtraInfo(snapshot.data?[index]),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                });
+          } else if (snapshot.hasError) {
+            return Center(child: Text('ERROR ${snapshot.error}'));
+          }
+          // By default, show a loading spinner.
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
+  }
+}
+
+Icon modeIcon(mode) {
+  return const Icon(Icons.ac_unit);
+  if (mode == "BUS") {
+    return const Icon(FirstIcons.bus);
+  } else if (mode == "RAIL") {
+    return const Icon(FirstIcons.train);
+  } else if (mode == "TRAM") {
+    return const Icon(FirstIcons.tram);
+  } else if (mode == "FERRY") {
+    return const Icon(FirstIcons.directions_boat);
+  } else if (mode == "AIRPLANE") {
+    return const Icon(FirstIcons.airplanemode_active);
+  } else if (mode == "SPEEDTRAM") {
+    return const Icon(Icons.bolt);
+  } else {
+    return const Icon(Icons.question_mark);
+  }
+}
+
+Wrap stopExtraInfo(data) {
+  return Wrap(
+    spacing: 5,
+    children: [
+      if (data.kunta != null)
+        if (data.alue != null)
+          Text("${data.kunta} (${data.alue})")
+        else
+          Text("${data.kunta}"),
+      if (data.code != null)
+        Container(
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(5)),
+            color: Color.fromARGB(255, 204, 204, 204),
+          ),
+          child: Text(" ${data.code} "),
+        ),
+      if (data.platform != null)
+        Wrap(
+          children: [
+            const Text("platform "),
+            Container(
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(5)),
+                color: Color.fromARGB(255, 204, 204, 204),
+              ),
+              child: Text(" ${data.platform} "),
+            ),
+          ],
+        )
+    ],
+  );
+}
+
+Future<List> fetchStops(url) async {
+  final response = await http.get(Uri.parse(url));
+
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+
+    int length = data['features'].length;
+    List resultsList = [];
+    for (var i = 0; i < length; i++) {
+      resultsList.add(ResultStop.fromJson(data['features'][i]));
+    }
+    return (resultsList);
+  } else {
+    throw Exception('Failed to fetch');
   }
 }
 
