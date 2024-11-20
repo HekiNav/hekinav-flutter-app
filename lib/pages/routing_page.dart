@@ -347,19 +347,22 @@ class _RoutingPageState extends State<RoutingPage> {
                 ],
               ),
             ),
-            ElevatedButton(
-              onPressed: () => searchNavigatorKey.currentState?.push(
-                MaterialPageRoute(
-                  builder: (context) => searchPlace("Destination"),
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: Container(
-                child: const Row(
-                  children: [
-                    Icon(Icons.place),
-                    Text("Destination"),
-                  ],
+              onPressed: () => searchNavigatorKey.currentState?.push(
+                MaterialPageRoute(
+                  builder: (context) => searchPlace("Origin"),
                 ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.place),
+                  Text("Origin"),
+                ],
               ),
             ),
             Row(
@@ -550,27 +553,27 @@ class _RoutingPageState extends State<RoutingPage> {
 
   LayoutBuilder routePreview(Itinerary itinerary) {
     return LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) => Row(
-              children: [
-                for (var leg in itinerary.legs)
-                  SizedBox(
-                    width: leg.duration /
-                        itinerary.duration *
-                        constraints.maxWidth,
-                    height: 20,
-                    child: DecoratedBox(
-                        decoration: BoxDecoration(
-                            color: colorFromRouteType(leg.route?.type),
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(4))),
-                        child: Center(
-                          child: legBox(leg),
-                        )),
-                  ),
-              ],
-            ));
+      builder: (BuildContext context, BoxConstraints constraints) => Row(
+        children: [
+          for (var leg in itinerary.legs)
+            SizedBox(
+              width: leg.duration / itinerary.duration * constraints.maxWidth,
+              height: 20,
+              child: DecoratedBox(
+                  decoration: BoxDecoration(
+                      color: colorFromRouteType(leg.route?.type),
+                      borderRadius: const BorderRadius.all(Radius.circular(4))),
+                  child: Center(
+                    child: legBox(leg),
+                  )),
+            ),
+        ],
+      ),
+    );
   }
 
+  var fromText = "";
+  var toText = "";
   LayoutBuilder searchPlace(String text) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) => Container(
@@ -578,8 +581,7 @@ class _RoutingPageState extends State<RoutingPage> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: ListView(
-              physics: const NeverScrollableScrollPhysics(),
+            child: Column(
               children: [
                 ElevatedButton(
                   onPressed: () {
@@ -590,6 +592,10 @@ class _RoutingPageState extends State<RoutingPage> {
                 if (text == "Origin")
                   TextField(
                     controller: fromController,
+                    onChanged: (value) => setState(() {
+                      print(value);
+                      fromText = fromController.text;
+                    }),
                     decoration: const InputDecoration(
                       prefixIcon: Icon(Icons.place),
                       border: OutlineInputBorder(),
@@ -599,13 +605,27 @@ class _RoutingPageState extends State<RoutingPage> {
                 if (text == "Destination")
                   TextField(
                     controller: toController,
+                    onChanged: (value) => setState(() {
+                      print(value);
+                      toText = toController.text;
+                    }),
                     decoration: const InputDecoration(
                       prefixIcon: Icon(Icons.place),
                       border: OutlineInputBorder(),
                       hintText: 'Destination',
                     ),
                   ),
-                searchResults(text == "Origin" ? "Tikkurila" : "Latokaski")
+                Flexible(
+                  child: searchResults(
+                    text == "Origin"
+                        ? fromText == ""
+                            ? "Latokaski"
+                            : fromText
+                        : toText == ""
+                            ? "Tikkurila"
+                            : toText,
+                  ),
+                ),
               ],
             ),
           ),
@@ -664,26 +684,26 @@ Color colorFromRouteType(int? route_type) {
     case null: //walk
       return Colors.grey;
     case 0: //tram
-      return Colors.green;
+      return const Color.fromRGBO(0, 152, 95, 1);
     case 1: //metro
-      return Colors.red;
+      return const Color.fromRGBO(255, 99, 25, 1);
     case 4: //ferry
-      return Colors.teal;
+      return const Color.fromRGBO(0, 185, 228, 1);
     case 102: //long distance train
       return Colors.green;
     case 109: //short distance train
-      return Colors.purple;
+      return const Color.fromRGBO(140, 71, 153, 1);
     case 3: //bus
     case 700: //bus
     case 701: //bus
-      return Colors.blue;
+      return const Color.fromRGBO(0, 122, 201, 1);
     case 702: //trunk bus
       return const Color(0xffEA7000);
     case 704: //lähibussi
     case 712: //lähibussi
       return Colors.cyan;
     case 900: //speedtram
-      return const Color(0xff006400);
+      return const Color.fromRGBO(0, 126, 121, 1);
     case 1104: //airplane
       return const Color(0xff00008B);
     default:
@@ -706,31 +726,34 @@ Padding searchResults(stopInputString) {
         future: data,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return ListView.builder(
-                primary: false,
-                physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: snapshot.data?.length,
-                shrinkWrap: true,
-                scrollDirection: Axis.vertical,
-                itemBuilder: (BuildContext context, int index) {
-                  return ListTile(
-                    title: Row(
-                      children: [
-                        modeIcon(snapshot.data?[index].mode),
-                        const Text(" "),
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(snapshot.data?[index].name),
-                              stopExtraInfo(snapshot.data?[index]),
-                            ],
+            return Flexible(
+              flex: 1,
+              child: ListView.builder(
+                  primary: false,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: snapshot.data?.length,
+                  shrinkWrap: true,
+                  scrollDirection: Axis.vertical,
+                  itemBuilder: (BuildContext context, int index) {
+                    return ListTile(
+                      title: Row(
+                        children: [
+                          modeIcon(snapshot.data?[index].mode),
+                          const Text(" "),
+                          Flexible(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(snapshot.data?[index].name),
+                                stopExtraInfo(snapshot.data?[index]),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                });
+                        ],
+                      ),
+                    );
+                  }),
+            );
           } else if (snapshot.hasError) {
             return Center(child: Text('ERROR ${snapshot.error}'));
           }
@@ -742,22 +765,59 @@ Padding searchResults(stopInputString) {
   }
 }
 
-Icon modeIcon(mode) {
-  return const Icon(Icons.ac_unit);
-  if (mode == "BUS") {
-    return const Icon(FirstIcons.bus);
-  } else if (mode == "RAIL") {
-    return const Icon(FirstIcons.train);
-  } else if (mode == "TRAM") {
-    return const Icon(FirstIcons.tram);
-  } else if (mode == "FERRY") {
-    return const Icon(FirstIcons.directions_boat);
-  } else if (mode == "AIRPLANE") {
-    return const Icon(FirstIcons.airplanemode_active);
-  } else if (mode == "SPEEDTRAM") {
-    return const Icon(Icons.bolt);
+Widget modeIcons(modes) {
+  if (modes.length == 1) {
+    return modeIcon(modes[1]);
   } else {
-    return const Icon(Icons.question_mark);
+    return Row(
+      children: [for (var mode in modes) modeIcon(mode)],
+    );
+  }
+}
+
+Icon modeIcon(mode) {
+  switch (mode) {
+    case "BUS":
+      return const Icon(Icons.directions_bus,
+          color: Color.fromRGBO(0, 185, 228, 1));
+    case "BUS-LOCAL":
+      return const Icon(Icons.directions_bus,
+          color: Color.fromRGBO(78, 222, 255, 1));
+    case "BUS-EXPRESS":
+      return const Icon(Icons.directions_bus,
+          color: Color.fromRGBO(0, 111, 136, 1));
+    case "RAIL":
+      return const Icon(Icons.directions_train,
+          color: Color.fromRGBO(140, 71, 153, 1));
+    case "SPEEDTRAM":
+      return const Icon(
+        Icons.bolt,
+      );
+    case "TRAM":
+      return const Icon(Icons.directions_railway,
+          color: Color.fromRGBO(0, 152, 95, 1));
+    case "FERRY":
+      return const Icon(Icons.directions_boat,
+          color: Color.fromRGBO(0, 185, 228, 1));
+    case "AIRPLANE":
+      return const Icon(Icons.airplanemode_active);
+
+    default:
+      return const Icon(Icons.question_mark);
+    /* case "BUS":
+      return const Icon(FirstIcons.bus);
+    case "RAIL":
+      return const Icon(FirstIcons.train);
+    case "TRAM":
+      return const Icon(FirstIcons.tram);
+    case "FERRY":
+      return const Icon(FirstIcons.directions_boat);
+    case "AIRPLANE":
+      return const Icon(FirstIcons.airplanemode_active);
+    case "SPEEDTRAM":
+      return const Icon(Icons.bolt);
+    default:
+      return const Icon(Icons.question_mark); */
   }
 }
 

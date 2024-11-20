@@ -31,9 +31,9 @@ class FirstIcons {
 
   static const IconData train =
       IconData(0xe800, fontFamily: _kFontFam, fontPackage: _kFontPkg);
-  static const IconData directions_boat =
+  static const IconData directionsBoat =
       IconData(0xe801, fontFamily: _kFontFam, fontPackage: _kFontPkg);
-  static const IconData airplanemode_active =
+  static const IconData airplanemodeActive =
       IconData(0xe802, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData tram =
       IconData(0xe803, fontFamily: _kFontFam, fontPackage: _kFontPkg);
