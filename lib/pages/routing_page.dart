@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -12,8 +11,9 @@ import 'package:graphql/client.dart';
 import 'package:http/http.dart' as http;
 import 'package:polyline_codec/polyline_codec.dart';
 import 'package:intl/intl.dart';
-import 'package:hekinav/icon/first_icons_icons.dart';
 import 'package:hekinav/models/search_results.dart';
+
+import 'dart:developer';
 
 HttpLink link = HttpLink(
     "https://api.digitransit.fi/routing/v2/routers/hsl/index/graphql",
@@ -59,19 +59,18 @@ class _RoutingPageState extends State<RoutingPage> {
   }
 
   _onMapCreated(MapboxMap mapboxMap) async {
-    mapboxMap.style.addSource(VectorSource(id: "finland-stops", tiles: [
+    await mapboxMap.style.addSource(VectorSource(id: "finland-stops", tiles: [
       "https://cdn.digitransit.fi/map/v2/finland-stop-map/{z}/{x}/{y}.pbf"
     ]));
-
-    mapboxMap.style.addLayer(CircleLayer(
+    await mapboxMap.style.addLayer(
+      CircleLayer(
+        slot: "top",
         id: "finland-stops-layer",
         sourceId: "finland-stops",
-        sourceLayer: "stops"));
-    await mapboxMap.style.addLayer(LineLayer(
-        id: "tile-debug",
-        sourceId: "finland-stops",
-        lineColor: Colors.red.value,
-        lineWidth: 1));
+        sourceLayer: "stops",
+        circleColor: Colors.red.value,
+      ),
+    );
 
     circleAnnotationManager =
         await mapboxMap.annotations.createCircleAnnotationManager();
@@ -290,13 +289,6 @@ class _RoutingPageState extends State<RoutingPage> {
       ),
       body: Stack(
         children: [
-          MapWidget(
-            onMapCreated: _onMapCreated,
-            cameraOptions: camera,
-            styleUri: themeState.theme == ThemeMode.dark
-                ? MapboxStyles.DARK
-                : MapboxStyles.STANDARD,
-          ),
           Navigator(
             key: searchNavigatorKey,
             onGenerateRoute: (settings) {
@@ -640,40 +632,51 @@ class _RoutingPageState extends State<RoutingPage> {
     );
   }
 
-  LayoutBuilder mainSheet() {
-    return LayoutBuilder(
+  Stack mainSheet() {
+    return Stack(children: [
+      KeepAlive(
+        keepAlive: true,
+        child: MapWidget(
+          onMapCreated: _onMapCreated,
+          cameraOptions: camera,
+        ),
+      ),
+      LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) =>
             DraggableScrollableSheet(
-                minChildSize: 0.1,
-                maxChildSize: 0.9,
-                initialChildSize: 0.4,
-                builder: (context, scrollController) {
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: const BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          topLeft: Radius.circular(20),
-                        ),
-                      ),
-                      child: SingleChildScrollView(
-                        controller: scrollController,
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Navigator(
-                            key: bottomDrawerKey,
-                            onGenerateRoute: (route) => MaterialPageRoute(
-                              settings: route,
-                              builder: (context) => searchView(context),
-                            ),
-                          ),
-                        ),
+          minChildSize: 0.1,
+          maxChildSize: 0.9,
+          initialChildSize: 0.4,
+          builder: (context, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(20),
+                    topLeft: Radius.circular(20),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Navigator(
+                      key: bottomDrawerKey,
+                      onGenerateRoute: (route) => MaterialPageRoute(
+                        settings: route,
+                        builder: (context) => searchView(context),
                       ),
                     ),
-                  );
-                }));
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    ]);
   }
 }
 
