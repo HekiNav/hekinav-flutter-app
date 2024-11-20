@@ -342,7 +342,10 @@ class _RoutingPageState extends State<RoutingPage> {
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.place),
+                  Icon(
+                    Icons.place,
+                    color: Colors.lightGreen,
+                  ),
                   Text("Origin"),
                 ],
               ),
@@ -355,13 +358,16 @@ class _RoutingPageState extends State<RoutingPage> {
               ),
               onPressed: () => searchNavigatorKey.currentState?.push(
                 MaterialPageRoute(
-                  builder: (context) => searchPlace("Origin"),
+                  builder: (context) => searchPlace("Destination"),
                 ),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.place),
-                  Text("Origin"),
+                  Icon(
+                    Icons.place,
+                    color: Colors.red,
+                  ),
+                  Text("Destination"),
                 ],
               ),
             ),
