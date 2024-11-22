@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hekinav/main.dart';
 import 'package:hekinav/models/leg.dart';
+import 'package:hekinav/models/origin_destination.dart';
+import 'package:hekinav/models/place.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:hekinav/models/itinerary.dart';
@@ -85,30 +87,42 @@ class _RoutingPageState extends State<RoutingPage> {
   Future<List> fetchRoute() async {
     //remove previous markers
     pointAnnotationManager.deleteAll();
-
-    var fromRes = await http.get(Uri.parse(
-        'https://api.digitransit.fi/geocoding/v1/search?digitransit-subscription-key=bbc7a56df1674c59822889b1bc84e7ad&text=${fromController.text == "" ? "Latokaski" : fromController.text}&size=1&boundary.rect.max_lat=61.6&boundary.rect.min_lat=59.95&boundary.rect.min_lon=23.8&boundary.rect.max_lon=27.2'));
-    if (fromRes.statusCode != 200) {
-      throw Exception('Failed to fetch origin');
+    Origin routeOrigin;
+    Destination routeDestination;
+    if (origin.place != null) {
+      routeOrigin = origin;
+    } else if (fromController.text != "") {
+      routeOrigin = Origin.placeholder;
+    } else {
+      var fromRes = await http.get(Uri.parse(
+          'https://api.digitransit.fi/geocoding/v1/search?digitransit-subscription-key=bbc7a56df1674c59822889b1bc84e7ad&text=${fromController.text == "" ? "Latokaski" : fromController.text}&size=1&boundary.rect.max_lat=61.6&boundary.rect.min_lat=59.95&boundary.rect.min_lon=23.8&boundary.rect.max_lon=27.2'));
+      if (fromRes.statusCode != 200) {
+        throw Exception('Failed to fetch origin');
+      }
+      routeOrigin = Origin(place: Place.fromJson(json.decode(fromRes.body)));
     }
-    var fromCoords =
-        json.decode(fromRes.body)['features'][0]["geometry"]["coordinates"];
-
-    var toRes = await http.get(Uri.parse(
-        'https://api.digitransit.fi/geocoding/v1/search?digitransit-subscription-key=bbc7a56df1674c59822889b1bc84e7ad&text=${toController.text == "" ? "Tikkurila" : toController.text}&size=1&boundary.rect.max_lat=61.6&boundary.rect.min_lat=59.95&boundary.rect.min_lon=23.8&boundary.rect.max_lon=27.2'));
-    if (toRes.statusCode != 200) {
-      throw Exception('Failed to fetch destination');
+    if (destination.place != null) {
+      routeDestination = destination;
+    } else if (toController.text != "") {
+      routeDestination = Destination.placeholder;
+    } else {
+      var toRes = await http.get(Uri.parse(
+          'https://api.digitransit.fi/geocoding/v1/search?digitransit-subscription-key=bbc7a56df1674c59822889b1bc84e7ad&text=${toController.text == "" ? "Tikkurila" : toController.text}&size=1&boundary.rect.max_lat=61.6&boundary.rect.min_lat=59.95&boundary.rect.min_lon=23.8&boundary.rect.max_lon=27.2'));
+      if (toRes.statusCode != 200) {
+        throw Exception('Failed to fetch destination');
+      }
+      routeDestination =
+          Destination(place: Place.fromJson(json.decode(toRes.body)));
     }
-    var toCoords =
-        json.decode(toRes.body)['features'][0]["geometry"]["coordinates"];
 
     String epicRequest = """
   {
   plan(
-    from: {lat: ${fromCoords[1]}, lon: ${fromCoords[0]}}
-    to: {lat: ${toCoords[1]}, lon: ${toCoords[0]}}
+    from: {lat: ${routeOrigin.place?.lat}, lon: ${routeOrigin.place?.lon}}
+    to: {lat: ${routeDestination.place?.lat}, lon: ${routeDestination.place?.lon}}
     time: "${startTime?.hour}:${startTime?.minute}:00"
     date: "${DateFormat("yyyy-MM-dd")}"
+    debugItineraryFilter: false
   ) {
     itineraries {
       duration
@@ -572,6 +586,8 @@ class _RoutingPageState extends State<RoutingPage> {
 
   var fromText = "";
   var toText = "";
+  late Origin origin;
+  late Destination destination;
   LayoutBuilder searchPlace(String text) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) => Container(
@@ -634,12 +650,9 @@ class _RoutingPageState extends State<RoutingPage> {
 
   Stack mainSheet() {
     return Stack(children: [
-      KeepAlive(
-        keepAlive: true,
-        child: MapWidget(
-          onMapCreated: _onMapCreated,
-          cameraOptions: camera,
-        ),
+      MapWidget(
+        onMapCreated: _onMapCreated,
+        cameraOptions: camera,
       ),
       LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) =>
@@ -720,15 +733,25 @@ Color colorFromRouteType(int? route_type) {
   }
 }
 
+Future<List<Place>> autocomplete(text) async {
+  var response = await http.get(
+    Uri.parse(
+      'https://api.digitransit.fi/geocoding/v1/autocomplete?digitransit-subscription-key=bbc7a56df1674c59822889b1bc84e7ad&text=$text&size=1&boundary.rect.max_lat=61.6&boundary.rect.min_lat=59.95&boundary.rect.min_lon=23.8&boundary.rect.max_lon=27.2',
+    ),
+  );
+  List results = jsonDecode(response.body)["features"];
+  return results.map((e) => Place.fromJson(e)).toList();
+}
+
 Padding searchResults(stopInputString) {
+  log(stopInputString);
   if (stopInputString == "") {
     return const Padding(
       padding: EdgeInsets.all(0.0),
       child: Center(child: Text("no fooba just yet")),
     );
   } else {
-    var data = fetchStops(
-        'https://api.digitransit.fi/geocoding/v1/search?digitransit-subscription-key=bbc7a56df1674c59822889b1bc84e7ad&text=$stopInputString&size=1000&sources=gtfsMATKA%2CgtfsHSL%2CgtfsLINKKI%2Cgtfstampere%2CgtfsOULU%2Cgtfsdigitraffic%2CgtfsRauma%2CgtfsHameenlinna%2CgtfsKotka%2CgtfsKouvola%2CgtfsLappeenranta%2CgtfsMikkeli%2CgtfsVaasa%2CgtfsJoensuu%2CgtfsFOLI%2CgtfsLahti%2CgtfsKuopio%2CgtfsRovaniemi%2CgtfsKajaani%2CgtfsSalo%2CgtfsPori%2CgtfsRaasepori%2CgtfsVARELY%2CgtfsHarma%2CgtfsVikingline&layers=stop%2Cstation');
+    var data = autocomplete(stopInputString);
     return Padding(
       padding: const EdgeInsets.only(top: 20.0),
       child: FutureBuilder(
@@ -744,26 +767,11 @@ Padding searchResults(stopInputString) {
                   shrinkWrap: true,
                   scrollDirection: Axis.vertical,
                   itemBuilder: (BuildContext context, int index) {
-                    return ListTile(
-                      title: Row(
-                        children: [
-                          modeIcon(snapshot.data?[index].mode),
-                          const Text(" "),
-                          Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(snapshot.data?[index].name),
-                                stopExtraInfo(snapshot.data?[index]),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
+                    return searchResult(data);
                   }),
             );
           } else if (snapshot.hasError) {
+            throw Exception(snapshot.error);
             return Center(child: Text('ERROR ${snapshot.error}'));
           }
           // By default, show a loading spinner.
@@ -771,6 +779,36 @@ Padding searchResults(stopInputString) {
         },
       ),
     );
+  }
+}
+
+ListTile stopResult(Place data) {
+  return ListTile(
+    title: Row(
+      children: [
+        modeIcon(data.modes),
+        const Text(" "),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(data.name),
+              stopExtraInfo(data),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget searchResult(data) {
+  switch (data.type) {
+    case "stop":
+    case "station":
+      return stopResult(data);
+    default:
+      return const Text("wip");
   }
 }
 
