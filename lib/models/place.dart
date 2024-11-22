@@ -1,16 +1,16 @@
 class Place {
   double lat;
   double lon;
-  String region;
-  String localadmin;
-  String locality;
-  String neighbourhood;
+  String? region;
+  String? localadmin;
+  String? locality;
+  String? neighbourhood;
 
   String name;
-  String type;
-  String code;
-  String platform;
-  List<String> modes;
+  String? type;
+  String? code;
+  String? platform;
+  List modes;
 
   Place({
     required this.lat,
@@ -38,7 +38,7 @@ class Place {
       type: json['properties']['layer'],
       code: json['properties']?['addendum']?['GTFS']?['code'],
       platform: json['properties']?['addendum']?['GTFS']?['platform'],
-      modes: json['properties']?['addendum']?['GTFS']?['modes'],
+      modes: json['properties']?['addendum']?['GTFS']?['modes'] ?? [],
     );
   }
 }

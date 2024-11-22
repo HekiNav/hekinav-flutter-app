@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:hekinav/pages/main_page.dart';
 import 'package:hekinav/pages/routing_page.dart';
 import 'package:hekinav/pages/settings_page.dart';
+import 'package:hekinav/icon/search_icons_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:flutter/services.dart' show rootBundle;

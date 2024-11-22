@@ -29,12 +29,12 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  fonts:
-    - family:  FirstIcons
-      fonts:
-       - asset: font/FirstIcons.ttf
   assets:
     - assets/images/background.png
     - auth/secrets.json
     - assets/images/pin_red.png
     - assets/images/pin_green.png
+  fonts:
+      - family: SearchIcons
+        fonts:
+          - asset: fonts/SearchIcons.ttf

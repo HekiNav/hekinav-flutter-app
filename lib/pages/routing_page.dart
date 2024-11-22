@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hekinav/icon/search_icons_icons.dart';
 import 'package:hekinav/main.dart';
 import 'package:hekinav/models/leg.dart';
 import 'package:hekinav/models/origin_destination.dart';
@@ -100,6 +101,7 @@ class _RoutingPageState extends State<RoutingPage> {
         throw Exception('Failed to fetch origin');
       }
       routeOrigin = Origin(place: Place.fromJson(json.decode(fromRes.body)));
+      log("1");
     }
     if (destination.place != null) {
       routeDestination = destination;
@@ -113,6 +115,7 @@ class _RoutingPageState extends State<RoutingPage> {
       }
       routeDestination =
           Destination(place: Place.fromJson(json.decode(toRes.body)));
+      log("2");
     }
 
     String epicRequest = """
@@ -767,7 +770,7 @@ Padding searchResults(stopInputString) {
                   shrinkWrap: true,
                   scrollDirection: Axis.vertical,
                   itemBuilder: (BuildContext context, int index) {
-                    return searchResult(data);
+                    return searchResult(snapshot.data?[index]);
                   }),
             );
           } else if (snapshot.hasError) {
@@ -793,7 +796,7 @@ ListTile stopResult(Place data) {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(data.name),
-              stopExtraInfo(data),
+              //stopExtraInfo(data),
             ],
           ),
         ),
@@ -837,9 +840,7 @@ Icon modeIcon(mode) {
       return const Icon(Icons.directions_train,
           color: Color.fromRGBO(140, 71, 153, 1));
     case "SPEEDTRAM":
-      return const Icon(
-        Icons.bolt,
-      );
+      return const Icon(Icons.bolt, color: Color.fromRGBO(0, 126, 121, 1));
     case "TRAM":
       return const Icon(Icons.directions_railway,
           color: Color.fromRGBO(0, 152, 95, 1));
@@ -850,7 +851,7 @@ Icon modeIcon(mode) {
       return const Icon(Icons.airplanemode_active);
 
     default:
-      return const Icon(Icons.question_mark);
+      return const Icon(SearchIcons.uusimaa);
     /* case "BUS":
       return const Icon(FirstIcons.bus);
     case "RAIL":
