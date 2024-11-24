@@ -16,8 +16,9 @@ Inspiration for UI design taken from [HSLdevcom/digitransit-ui](https://github.c
 
 ## Usage
 #### Compile the repository with:
-- Flutter 3.24.0,
-- Android studio build tools 35
+- Flutter 3.24.4,
+- Dart version 3.5.4
+- Android: android-34, build-tools 34.0.0
 
 or
 #### Use the precompiled apk (wip)
