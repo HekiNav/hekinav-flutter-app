@@ -63,3 +63,9 @@ jobs:
           keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
 
           keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+      - name: Push to Releases
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/app/outputs/bundle/release/app-release.apk"
+          tag: v1.0.${{ github.run_number }}
+          token: ${{ secrets.TOKEN_SECRET }}
