@@ -7,10 +7,10 @@ name:
 on:
   # A new push to the "main" branch.
   push:
-    branches: ["main", "dev"]
+    branches: ["main"]
   # A new pull request to the "main" branch.
   pull_request:
-    branches: ["main", "dev"]
+    branches: ["main"]
 
 # A single workflow can have multiple jobs.
 jobs:
@@ -52,7 +52,7 @@ jobs:
         run: flutter pub get
       - name: Build release app bundle
         run: flutter build appbundle --dart-define ACCESS_TOKEN=${{ secrets.MAPBOX_SECRET_KEY }} --no-shrink
-          
+
       - name: Sign App Bundle
         uses: r0adkll/sign-android-release@v1
         id: sign_app
