@@ -19,7 +19,7 @@ import 'package:hekinav/models/search_results.dart';
 import 'dart:developer';
 
 HttpLink link = HttpLink(
-    "https://api.digitransit.fi/routing/v2/routers/hsl/index/graphql",
+    "https://api.digitransit.fi/routing/v2/routers/finland/index/graphql",
     defaultHeaders: {
       "digitransit-subscription-key": "a1e437f79628464c9ea8d542db6f6e94"
     });
