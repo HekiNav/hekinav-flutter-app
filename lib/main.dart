@@ -19,7 +19,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Pass your access token to MapboxOptions so you can load a map
-  var ACCESS_TOKEN = await loadTokens();
+  var ACCESS_TOKEN = /* await loadTokens(); */ String.fromEnvironment("ACCESS_TOKEN");
   MapboxOptions.setAccessToken(ACCESS_TOKEN);
 
   runApp(
