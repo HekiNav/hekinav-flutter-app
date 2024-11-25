@@ -24,6 +24,14 @@ jobs:
       # Checkout to the selected branch
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Restore gradle.properties
+        env:
+          GRADLE_PROPERTIES: ${{ secrets.GRADLE_PROPERTIES }}
+        shell: bash
+        run: |
+          mkdir -p ~/.gradle/
+          echo "GRADLE_USER_HOME=${HOME}/.gradle" >> $GITHUB_ENV
+          echo "${GRADLE_PROPERTIES}" > ~/.gradle/gradle.properties
       - name: Set up Java
         uses: actions/setup-java@v2
         with:
