@@ -1,6 +1,13 @@
 A flutter project for the hekinav routing mobile application.
-# Hekinav
-Hekinav is a finland-wide public mobile-oriented transport routing app with advanced features and full [OpenTripPlanner](https://www.opentripplanner.org/) parameter control.
+# Hekinav-flutter
+Hekinav-flutter is a
+- Finland-wide
+- Mobile-oriented
+- Open source
+
+public transport routing app with
+- advanced features and
+- full [OpenTripPlanner](https://www.opentripplanner.org/) parameter control.
 
 Routing services and most of the data provided by [Digitransit](https://digitransit.fi/en/developers/) open data. 
 Map provided by [MapBox](https://www.mapbox.com/) with [MapBox Flutter SDK](https://docs.mapbox.com/flutter/).
