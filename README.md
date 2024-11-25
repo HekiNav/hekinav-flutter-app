@@ -15,9 +15,8 @@ Inspiration for UI design taken from [HSLdevcom/digitransit-ui](https://github.c
 - Favorite places
 
 ## Usage
+#### Use the precompiled apk <a href="README.md" download>here</a> (wip)
+or
 #### Compile the repository with:
 - Flutter 3.24.0,
 - Android studio build tools 35
-
-or
-#### Use the precompiled apk (wip)
