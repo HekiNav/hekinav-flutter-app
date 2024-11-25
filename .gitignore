@@ -38,6 +38,10 @@ migrate_working_dir/
 # Symbolication related
 app.*.symbols
 
+*.keystore
+
+/hekinav.txt
+
 # Obfuscation related
 app.*.map.json
 
@@ -45,3 +49,4 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+hekinav.keystore
