@@ -10,7 +10,7 @@
             "type": "dart",
             "args": [
                 "--dart-define",
-                "ACCESS_TOKEN=sk.eyJ1IjoiaGVraW5hdiIsImEiOiJjbTNiZ2xrZnowamdkMmxxeTIyeGlheTFkIn0.SWuZ9CMYN4p1B6oWqAx3Og"
+                "ACCESS_TOKEN=no leaking please"
             ]
         },
         {
@@ -20,7 +20,7 @@
             "flutterMode": "profile",
             "args": [
                 "--dart-define",
-                "ACCESS_TOKEN=sk.eyJ1IjoiaGVraW5hdiIsImEiOiJjbTNiZ2xrZnowamdkMmxxeTIyeGlheTFkIn0.SWuZ9CMYN4p1B6oWqAx3Og"
+                "ACCESS_TOKEN=no leaking please"
             ]
         },
         {
@@ -30,7 +30,7 @@
             "flutterMode": "release",
             "args": [
                 "--dart-define",
-                "ACCESS_TOKEN=sk.eyJ1IjoiaGVraW5hdiIsImEiOiJjbTNiZ2xrZnowamdkMmxxeTIyeGlheTFkIn0.SWuZ9CMYN4p1B6oWqAx3Og"
+                "ACCESS_TOKEN=no leaking please"
             ]
         }
     ]
