@@ -34,6 +34,8 @@ jobs:
         with:
           java-version: 17
           distribution: "temurin"
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
       # Download and install flutter packages
       - name: Install Flutter
         uses: subosito/flutter-action@v2
