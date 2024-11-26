@@ -1,6 +1,6 @@
 # Name of the workflow
 name:
-  Build
+  Test build
 
   # Controls what will trigger the workflow.
   # Change it to your needs.
@@ -12,7 +12,7 @@ on:
 # A single workflow can have multiple jobs.
 jobs:
   # 'A new job is defined with the name: "build_android"
-  build_android:
+  test_build_android:
     # Defines what operating system will be used for the actions.
     # For android, we will use Linux GitHub-Hosted Runner.
     runs-on: ubuntu-22.04
