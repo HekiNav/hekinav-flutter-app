@@ -51,3 +51,5 @@ app.*.map.json
 /android/app/release
 hekinav.keystore
 .vscode/launch.json
+gradle.properties
+auth/secrets.json
