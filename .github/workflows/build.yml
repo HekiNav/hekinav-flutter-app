@@ -8,9 +8,6 @@ on:
   # A new push to the "main" branch.
   push:
     branches: ["main"]
-  # A new pull request to the "main" branch.
-  pull_request:
-    branches: ["main"]
 
 # A single workflow can have multiple jobs.
 jobs:
