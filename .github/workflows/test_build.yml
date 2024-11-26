@@ -55,11 +55,8 @@ jobs:
       - name: Get Run flutter clean
         run: flutter clean
 
-      - name: Check
-        run: flutter build apk --split-per-abi -h
-
       - name: Build apks
-        run: flutter build apk --split-per-abi
+        run: flutter build apk
 
       - name: Build release app bundle
         run: flutter build appbundle --dart-define ACCESS_TOKEN=${{ secrets.MAPBOX_SECRET_KEY }} --no-shrink
