@@ -55,6 +55,9 @@ jobs:
       - name: Get Run flutter clean
         run: flutter clean
 
+      - name: Check
+        run: flutter build apk --split-per-abi -h
+
       - name: Build apks
         run: flutter build apk --split-per-abi
 
