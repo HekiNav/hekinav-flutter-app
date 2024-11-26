@@ -47,6 +47,12 @@ jobs:
       # Get Flutter project dependencies
       - name: Get dependencies
         run: flutter pub get
+
+      - name: Run flutter doctor
+        run: flutter doctor
+      - name: Get Run flutter clean
+        run: flutter clean
+
       - name: Build apks
         run: flutter build apk --split-per-abi
 
