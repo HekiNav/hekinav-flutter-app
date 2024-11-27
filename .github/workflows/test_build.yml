@@ -56,7 +56,7 @@ jobs:
         run: flutter clean
 
       - name: Build apks
-        run: flutter build apk --dart-define ACCESS_TOKEN=${{ secrets.MAPBOX_SECRET_KEY }}
+        run: flutter build apk  --dart-define ACCESS_TOKEN=${{ secrets.MAPBOX_SECRET_KEY }}  --split-per-abi
 
       - name: Build release app bundle
         run: flutter build appbundle --dart-define ACCESS_TOKEN=${{ secrets.MAPBOX_SECRET_KEY }} --no-shrink
