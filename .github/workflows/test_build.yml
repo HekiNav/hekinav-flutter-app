@@ -56,18 +56,4 @@ jobs:
         run: flutter clean
 
       - name: Build apks
-        run: flutter build apk  --dart-define ACCESS_TOKEN=${{ secrets.MAPBOX_SECRET_KEY }}  --split-per-abi
-
-      - name: Build release app bundle
-        run: flutter build appbundle --dart-define ACCESS_TOKEN=${{ secrets.MAPBOX_SECRET_KEY }} --no-shrink
-
-      - name: Sign App Bundle
-        uses: r0adkll/sign-android-release@v1
-        id: sign_app
-        with:
-          releaseDirectory: build/app/outputs/bundle/release/
-          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_FILE_BASE64 }}
-          alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-
-          keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+        run: flutter build apk  --dart-define ACCESS_TOKEN=${{ secrets.MAPBOX_SECRET_KEY }}
