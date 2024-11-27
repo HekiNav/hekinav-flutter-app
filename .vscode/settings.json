@@ -2,5 +2,6 @@
     "editor.codeActionsOnSave": {
         "source.fixAll": "always"
     },
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "dart.flutterSdkPath": "C:\\flutter\\flutter"
 }

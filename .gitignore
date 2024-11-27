@@ -53,3 +53,4 @@ hekinav.keystore
 .vscode/launch.json
 gradle.properties
 auth/secrets.json
+.vscode/settings.json
