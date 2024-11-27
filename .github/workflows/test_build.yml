@@ -1,6 +1,6 @@
 # Name of the workflow
 name:
-  Build
+  Test build
 
   # Controls what will trigger the workflow.
   # Change it to your needs.
@@ -12,7 +12,7 @@ on:
 # A single workflow can have multiple jobs.
 jobs:
   # 'A new job is defined with the name: "build_android"
-  build_android:
+  test_build_android:
     # Defines what operating system will be used for the actions.
     # For android, we will use Linux GitHub-Hosted Runner.
     runs-on: ubuntu-22.04
@@ -34,6 +34,8 @@ jobs:
         with:
           java-version: 17
           distribution: "temurin"
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
       # Download and install flutter packages
       - name: Install Flutter
         uses: subosito/flutter-action@v2
@@ -47,19 +49,11 @@ jobs:
       # Get Flutter project dependencies
       - name: Get dependencies
         run: flutter pub get
+
+      - name: Run flutter doctor
+        run: flutter doctor
+      - name: Get Run flutter clean
+        run: flutter clean
+
       - name: Build apks
-        run: flutter build apk  --split-per-abi --dart-define ACCESS_TOKEN=${{ secrets.MAPBOX_SECRET_KEY }}
-
-      - name: Build release app bundle
-        run: flutter build appbundle --dart-define ACCESS_TOKEN=${{ secrets.MAPBOX_SECRET_KEY }} --no-shrink
-
-      - name: Sign App Bundle
-        uses: r0adkll/sign-android-release@v1
-        id: sign_app
-        with:
-          releaseDirectory: build/app/outputs/bundle/release/
-          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_FILE_BASE64 }}
-          alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-
-          keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+        run: flutter build apk  --dart-define ACCESS_TOKEN=${{ secrets.MAPBOX_SECRET_KEY }}
