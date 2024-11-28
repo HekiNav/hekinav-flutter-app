@@ -50,7 +50,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 hekinav.keystore
-.vscode/launch.json
+.vscode/
 gradle.properties
 auth/secrets.json
 .vscode/settings.json
+android/java_pid6852.hprof
+*/launch.json
+.vscode/launch.json
