@@ -6,6 +6,8 @@ class Place {
   String? locality;
   String? neighbourhood;
 
+  String? postalcode;
+
   String name;
   String? type;
   String? code;
@@ -20,6 +22,7 @@ class Place {
     required this.localadmin,
     required this.locality,
     required this.neighbourhood,
+    required this.postalcode,
     required this.type,
     required this.code,
     required this.platform,
@@ -33,6 +36,7 @@ class Place {
       region: json['properties']['region'],
       name: json['properties']['name'],
       neighbourhood: json['properties']['neighbourhood'],
+      postalcode: json['properties']['postalcode'],
       localadmin: json['properties']['localadmin'],
       locality: json['properties']['locality'],
       type: json['properties']['layer'],

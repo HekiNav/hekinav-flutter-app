@@ -56,7 +56,7 @@ Future<List<Place>> autocomplete(text) async {
   return results.map((e) => Place.fromJson(e)).toList();
 }
 
-Padding searchResults(stopInputString) {
+Padding searchResults(stopInputString, onTap) {
   log(stopInputString);
   if (stopInputString == "") {
     return const Padding(
@@ -80,7 +80,7 @@ Padding searchResults(stopInputString) {
                   shrinkWrap: true,
                   scrollDirection: Axis.vertical,
                   itemBuilder: (BuildContext context, int index) {
-                    return searchResult(snapshot.data?[index]);
+                    return searchResult(snapshot.data?[index], onTap);
                   }),
             );
           } else if (snapshot.hasError) {
@@ -95,18 +95,19 @@ Padding searchResults(stopInputString) {
   }
 }
 
-ListTile stopResult(Place data) {
+ListTile stopResult(Place data, onTap) {
   return ListTile(
+    onTap: () => onTap(data),
     title: Row(
       children: [
-        modeIcon(data.modes),
+        modeIcons(data.modes),
         const Text(" "),
         Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.start,
             children: [
-              Text(data.name),
-              //stopExtraInfo(data),
+              Text("${data.name} "),
+              stopExtraInfo(data),
             ],
           ),
         ),
@@ -115,23 +116,68 @@ ListTile stopResult(Place data) {
   );
 }
 
-Widget searchResult(data) {
+ListTile otherResult(Place data, onTap) {
+  return ListTile(
+    onTap: () => onTap(data),
+    title: Row(
+      children: [
+        resultTypeIcon(data.type),
+        const Text(" "),
+        Flexible(
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.start,
+            children: [
+              Text("${data.name} "),
+              searchResultLocationInfo(data),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget searchResult(data, onTap) {
   switch (data.type) {
     case "stop":
     case "station":
-      return stopResult(data);
+      return stopResult(data, onTap);
     default:
-      return const Text("wip");
+      return otherResult(data, onTap);
+    /* default:
+      return const Text("wip"); */
   }
 }
 
 Widget modeIcons(modes) {
   if (modes.length == 1) {
-    return modeIcon(modes[1]);
+    return modeIcon(modes[0]);
   } else {
     return Row(
       children: [for (var mode in modes) modeIcon(mode)],
     );
+  }
+}
+
+Icon resultTypeIcon(type) {
+  switch (type) {
+    case "region":
+      return const Icon(SearchIcons.uusimaa);
+    case "address":
+      return const Icon(Icons.pin_drop);
+    case "venue":
+      return const Icon(Icons.business);
+    case "bikestation":
+      return const Icon(Icons.pedal_bike);
+    case "neighbourhood":
+      return const Icon(SearchIcons.neigh);
+    case "street":
+      return const Icon(SearchIcons.road);
+    case "localadmin":
+      return const Icon(SearchIcons.town_hall);
+    default:
+      print(type);
+      return const Icon(Icons.question_mark);
   }
 }
 
@@ -159,9 +205,11 @@ Icon modeIcon(mode) {
           color: Color.fromRGBO(0, 185, 228, 1));
     case "AIRPLANE":
       return const Icon(Icons.airplanemode_active);
-
+    case "SUBWAY":
+      return const Icon(Icons.directions_subway,
+          color: Color.fromRGBO(255, 99, 25, 1));
     default:
-      return const Icon(SearchIcons.uusimaa);
+      return const Icon(Icons.question_mark);
     /* case "BUS":
       return const Icon(FirstIcons.bus);
     case "RAIL":
@@ -179,15 +227,21 @@ Icon modeIcon(mode) {
   }
 }
 
-Wrap stopExtraInfo(data) {
+Wrap searchResultLocationInfo(Place data) {
   return Wrap(
     spacing: 5,
     children: [
-      if (data.kunta != null)
-        if (data.alue != null)
-          Text("${data.kunta} (${data.alue})")
-        else
-          Text("${data.kunta}"),
+      if (data.neighbourhood != null) Text("${data.neighbourhood}, "),
+      if (data.locality != null) Text("${data.locality}, "),
+      if (data.region != null) Text("${data.region}"),
+    ],
+  );
+}
+
+Wrap stopExtraInfo(Place data) {
+  return Wrap(
+    spacing: 5,
+    children: [
       if (data.code != null)
         Container(
           decoration: const BoxDecoration(
@@ -199,7 +253,7 @@ Wrap stopExtraInfo(data) {
       if (data.platform != null)
         Wrap(
           children: [
-            const Text("platform "),
+            const Text("pl. "),
             Container(
               decoration: const BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(5)),

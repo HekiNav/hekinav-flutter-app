@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hekinav/main.dart';
@@ -62,7 +63,7 @@ class _RoutingPageState extends State<RoutingPage> {
 
   _onMapCreated(MapboxMap mapboxMap) async {
     await mapboxMap.style.addSource(VectorSource(id: "finland-stops", tiles: [
-      "https://cdn.digitransit.fi/map/v2/finland-stop-map/{z}/{x}/{y}.pbf"
+      "https://cdn.digitransit.fi/map/v3/finland/en/stops,stations/{z}/{x}/{y}.pbf?digitransit-subscription-key=06421a1eb31d4cc9a4781a585bb306c2"
     ]));
     await mapboxMap.style.addLayer(
       CircleLayer(
@@ -72,6 +73,12 @@ class _RoutingPageState extends State<RoutingPage> {
         sourceLayer: "stops",
         circleColor: Colors.red.value,
       ),
+    );
+    await mapboxMap.style.setStyleLayerProperties(
+      'finland-stops-layer',
+      jsonEncode({
+        'circle-color': ['get', 'gtfsId'],
+      }),
     );
 
     circleAnnotationManager =
@@ -100,7 +107,6 @@ class _RoutingPageState extends State<RoutingPage> {
         throw Exception('Failed to fetch origin');
       }
       routeOrigin = Origin(place: Place.fromJson(json.decode(fromRes.body)));
-      log("1");
     }
     if (destination.place != null) {
       routeDestination = destination;
@@ -114,7 +120,6 @@ class _RoutingPageState extends State<RoutingPage> {
       }
       routeDestination =
           Destination(place: Place.fromJson(json.decode(toRes.body)));
-      log("2");
     }
 
     String epicRequest = """
@@ -212,6 +217,7 @@ class _RoutingPageState extends State<RoutingPage> {
         ),
       );
     }
+    Fluttertoast.showToast(msg: "Could not get routes");
     return routeList;
   }
 
@@ -348,13 +354,15 @@ class _RoutingPageState extends State<RoutingPage> {
                   builder: (context) => searchPlace("Origin"),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.place,
                     color: Colors.lightGreen,
                   ),
-                  Text("Origin"),
+                  Text(origin.place == null
+                      ? "Destination"
+                      : origin.place!.name),
                 ],
               ),
             ),
@@ -369,13 +377,15 @@ class _RoutingPageState extends State<RoutingPage> {
                   builder: (context) => searchPlace("Destination"),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.place,
                     color: Colors.red,
                   ),
-                  Text("Destination"),
+                  Text(destination.place == null
+                      ? "Destination"
+                      : destination.place!.name),
                 ],
               ),
             ),
@@ -439,6 +449,7 @@ class _RoutingPageState extends State<RoutingPage> {
         builder: (context) => mainView(context, routeList),
       ),
     );
+
     final ByteData bytesR = await rootBundle.load('assets/images/pin_red.png');
     final Uint8List imageDataR = bytesR.buffer.asUint8List();
 
@@ -446,25 +457,29 @@ class _RoutingPageState extends State<RoutingPage> {
         await rootBundle.load('assets/images/pin_green.png');
     final Uint8List imageDataG = bytesG.buffer.asUint8List();
 
-    pointAnnotationManager.create(PointAnnotationOptions(
-      geometry: Point(
-        coordinates: Position(
-            routeList[0].legs[0].from.lon, routeList[0].legs[0].from.lat),
-      ), // Example coordinates
-      image: imageDataR,
-      iconSize: 0.1,
-      iconAnchor: IconAnchor.BOTTOM,
-    ));
-    pointAnnotationManager.create(PointAnnotationOptions(
-      geometry: Point(
-        coordinates: Position(
-            routeList[0].legs.last.to.lon, routeList[0].legs.last.to.lat),
-      ), // Example coordinates
-      image: imageDataG,
-      iconSize: 0.1,
-      iconAnchor: IconAnchor.BOTTOM,
-    ));
-    selectRoute(routeList, 0);
+    if (routeList.isNotEmpty) {
+      pointAnnotationManager.create(PointAnnotationOptions(
+        geometry: Point(
+          coordinates: Position(
+              routeList[0].legs[0].from.lon, routeList[0].legs[0].from.lat),
+        ), // Example coordinates
+        image: imageDataR,
+        iconSize: 0.1,
+        iconAnchor: IconAnchor.BOTTOM,
+      ));
+      pointAnnotationManager.create(PointAnnotationOptions(
+        geometry: Point(
+          coordinates: Position(
+              routeList[0].legs.last.to.lon, routeList[0].legs.last.to.lat),
+        ), // Example coordinates
+        image: imageDataG,
+        iconSize: 0.1,
+        iconAnchor: IconAnchor.BOTTOM,
+      ));
+      selectRoute(routeList, 0);
+    } else {
+      log("no routes");
+    }
   }
 
   void selectRoute(List routeList, int index) {
@@ -588,9 +603,16 @@ class _RoutingPageState extends State<RoutingPage> {
 
   var fromText = "";
   var toText = "";
-  late Origin origin;
-  late Destination destination;
+  Origin origin = Origin(place: null);
+  Destination destination = Destination(place: null);
   LayoutBuilder searchPlace(String text) {
+    var input = text == "Origin"
+        ? fromText == ""
+            ? "Latokaski"
+            : fromText
+        : toText == ""
+            ? "Tikkurila"
+            : toText;
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) => Container(
         color: Colors.white,
@@ -632,15 +654,14 @@ class _RoutingPageState extends State<RoutingPage> {
                     ),
                   ),
                 Flexible(
-                  child: searchResults(
-                    text == "Origin"
-                        ? fromText == ""
-                            ? "Latokaski"
-                            : fromText
-                        : toText == ""
-                            ? "Tikkurila"
-                            : toText,
-                  ),
+                  child: searchResults(input, (Place data) {
+                    if (text == "Origin") {
+                      origin = Origin(place: data);
+                    } else {
+                      destination = Destination(place: data);
+                    }
+                    searchNavigatorKey.currentState?.pop();
+                  }),
                 ),
               ],
             ),
