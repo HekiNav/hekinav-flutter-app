@@ -24,6 +24,7 @@ dependencies:
   flutter_map: ^7.0.2
   flutter_map_cancellable_tile_provider: ^3.0.2
   fluttertoast: ^8.2.8
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

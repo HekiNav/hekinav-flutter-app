@@ -9,6 +9,7 @@ import 'package:hekinav/models/origin_destination.dart';
 import 'package:hekinav/models/place.dart';
 import 'package:hekinav/util/util.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:hekinav/models/itinerary.dart';
 import 'package:graphql/client.dart';
@@ -89,6 +90,16 @@ class _RoutingPageState extends State<RoutingPage> {
 
     pointAnnotationManager =
         await mapboxMap.annotations.createPointAnnotationManager();
+    await Permission.locationWhenInUse.request();
+    mapboxMap.location.updateSettings(LocationComponentSettings(
+        enabled: true,
+        showAccuracyRing: true,
+        locationPuck: LocationPuck(
+            locationPuck2D: LocationPuck2D(),
+            locationPuck3D: LocationPuck3D(
+              modelUri:
+                  "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Embedded/Duck.gltf",
+            ))));
   }
 
   Future<List> fetchRoute() async {
@@ -653,6 +664,7 @@ class _RoutingPageState extends State<RoutingPage> {
                   ),
                 Flexible(
                   child: searchResults(input, (Place data) async {
+                    pointAnnotationManager.deleteAll();
                     if (text == "Origin") {
                       final ByteData bytesG =
                           await rootBundle.load('assets/images/pin_green.png');
