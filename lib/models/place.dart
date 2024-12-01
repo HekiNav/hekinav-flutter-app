@@ -31,8 +31,8 @@ class Place {
 
   factory Place.fromJson(Map<String, dynamic> json) {
     return Place(
-      lat: json['geometry']['coordinates'][0],
-      lon: json['geometry']['coordinates'][1],
+      lat: json['geometry']['coordinates'][1],
+      lon: json['geometry']['coordinates'][0],
       region: json['properties']['region'],
       name: json['properties']['name'],
       neighbourhood: json['properties']['neighbourhood'],

@@ -360,9 +360,7 @@ class _RoutingPageState extends State<RoutingPage> {
                     Icons.place,
                     color: Colors.lightGreen,
                   ),
-                  Text(origin.place == null
-                      ? "Destination"
-                      : origin.place!.name),
+                  Text(origin.place == null ? "Origin" : origin.place!.name),
                 ],
               ),
             ),
@@ -654,11 +652,40 @@ class _RoutingPageState extends State<RoutingPage> {
                     ),
                   ),
                 Flexible(
-                  child: searchResults(input, (Place data) {
+                  child: searchResults(input, (Place data) async {
                     if (text == "Origin") {
-                      origin = Origin(place: data);
+                      final ByteData bytesG =
+                          await rootBundle.load('assets/images/pin_green.png');
+                      setState(() {
+                        final Uint8List imageDataG =
+                            bytesG.buffer.asUint8List();
+                        origin = Origin(place: data);
+                        pointAnnotationManager.create(PointAnnotationOptions(
+                          geometry: Point(
+                            coordinates: Position(data.lon, data.lat),
+                          ), // Example coordinates
+                          image: imageDataG,
+                          iconSize: 0.1,
+                          iconAnchor: IconAnchor.BOTTOM,
+                        ));
+                      });
                     } else {
-                      destination = Destination(place: data);
+                      final ByteData bytesR =
+                          await rootBundle.load('assets/images/pin_red.png');
+
+                      setState(() {
+                        final Uint8List imageDataR =
+                            bytesR.buffer.asUint8List();
+                        destination = Destination(place: data);
+                        pointAnnotationManager.create(PointAnnotationOptions(
+                          geometry: Point(
+                            coordinates: Position(data.lon, data.lat),
+                          ), // Example coordinates
+                          image: imageDataR,
+                          iconSize: 0.1,
+                          iconAnchor: IconAnchor.BOTTOM,
+                        ));
+                      });
                     }
                     searchNavigatorKey.currentState?.pop();
                   }),

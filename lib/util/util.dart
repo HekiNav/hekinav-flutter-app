@@ -108,6 +108,7 @@ ListTile stopResult(Place data, onTap) {
             children: [
               Text("${data.name} "),
               stopExtraInfo(data),
+              searchResultLocationInfo(data),
             ],
           ),
         ),
